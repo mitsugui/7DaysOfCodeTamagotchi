@@ -1,0 +1,8 @@
+### Buscar lista de pokemons para oferecer o usuário
+
+GET https://pokeapi.co/api/v2/pokemon/?limit=60 HTTP/1.1
+
+
+### Busca detalhes de um pokemon
+
+GET https://pokeapi.co/api/v2/pokemon/25/ HTTP/1.1
