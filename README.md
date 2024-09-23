@@ -21,3 +21,8 @@ Será usada a biblioteca RestSharp para realizar as chamadas à API REST.
 Dia 2: Desserializar resposta do serviço em classes C#.
 
 Foram criadas DTOs dentro da pasta Responses para converter a resposta da API e imprimir o resultado de forma legível.
+
+
+Dia 3: Organização dos menus da aplicação.
+
+Foi criada uma classe para imprimir as opções do menu e responder às escolhas do usuário.
