@@ -17,3 +17,7 @@ Para essa implementação, foram escolhidos os seguintes pokemons:
 7. [Squirtle](https://pokeapi.co/api/v2/pokemon/7/)
 
 Será usada a biblioteca RestSharp para realizar as chamadas à API REST.
+
+Dia 2: Desserializar resposta do serviço em classes C#.
+
+Foram criadas DTOs dentro da pasta Responses para converter a resposta da API e imprimir o resultado de forma legível.
