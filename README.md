@@ -26,3 +26,7 @@ Foram criadas DTOs dentro da pasta Responses para converter a resposta da API e 
 Dia 3: Organização dos menus da aplicação.
 
 Foi criada uma classe para imprimir as opções do menu e responder às escolhas do usuário.
+
+Dia 4: Organizar em Model, View e Controller.
+
+Organização da lógica do jogo no Controller. Separação da impressão de mensagens e captura de opções para a view.

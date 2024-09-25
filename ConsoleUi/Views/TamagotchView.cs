@@ -1,3 +1,5 @@
+using ConsoleUi.Model;
+
 namespace ConsoleUi.Views;
 
 internal class TamagotchiView
@@ -116,7 +118,7 @@ internal class TamagotchiView
         Console.ReadKey();
     }
 
-    public void MostrarDetalhesDoMascote(PokemonResponse? mascote)
+    public void MostrarDetalhesDoMascote(Pokemon? mascote)
     {
         Console.Clear();
         Console.WriteLine(new string('-', 50));

@@ -1,4 +1,6 @@
-public record PokemonTypesResponse
+namespace ConsoleUi.Model;
+
+public record PokemonTypes
 (
     PokemonTypeResponse Type
 );
