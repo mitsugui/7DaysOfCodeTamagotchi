@@ -1,5 +1,6 @@
 using ConsoleUi.Service;
 using ConsoleUi.Views;
+using ConsoleUi.Model;
 
 namespace ConsoleUi.Controller;
 

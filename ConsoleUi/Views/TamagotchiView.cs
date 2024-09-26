@@ -14,8 +14,8 @@ internal class TamagotchiView
     public enum OpcoesMenuMascote : byte
     {
         SaberMais = 1,
-        Adotar,
-        Voltar
+        Adotar = 2,
+        Voltar = 3
     }
 
     public IReadOnlyList<string>? Pokemons { get; set; }
@@ -97,7 +97,7 @@ internal class TamagotchiView
         var opcao = Console.ReadLine();
         if (int.TryParse(opcao, out var indiceEscolha)
             && indiceEscolha > 0
-            && indiceEscolha < 3)
+            && indiceEscolha <= 3)
         {
             return (OpcoesMenuMascote)indiceEscolha;
         }
@@ -118,27 +118,27 @@ internal class TamagotchiView
         Console.ReadKey();
     }
 
-    public void MostrarDetalhesDoMascote(Pokemon? mascote)
+    public void MostrarDetalhesDoMascote(Tamagotchi? mascote)
     {
         Console.Clear();
         Console.WriteLine(new string('-', 50));
-        Console.WriteLine($@"Nome do Pokemon: {mascote?.Name}");
-        Console.WriteLine($" Altura: {mascote?.Height}");
-        Console.WriteLine($" Peso: {mascote?.Weight}");
-        if (mascote?.Types != null)
+        Console.WriteLine($@"Nome do Pokemon: {mascote?.Nome}");
+        Console.WriteLine($" Altura: {mascote?.Altura}");
+        Console.WriteLine($" Peso: {mascote?.Peso}");
+        if (mascote?.Tipos != null)
         {
             Console.WriteLine($" Tipos:");
-            foreach (var tipo in mascote.Types)
+            foreach (var tipo in mascote.Tipos)
             {
-                Console.WriteLine($" - {tipo.Type.Name}");
+                Console.WriteLine($" - {tipo}");
             }
         }
-        if (mascote?.Abilities != null)
+        if (mascote?.Habilidades != null)
         {
             Console.WriteLine($" Habilidades:");
-            foreach (var ability in mascote.Abilities)
+            foreach (var habilidade in mascote.Habilidades)
             {
-                Console.WriteLine($" - {ability.Ability.Name.ToUpper()}");
+                Console.WriteLine($" - {habilidade.ToUpper()}");
             }
         }
 

@@ -9,8 +9,56 @@ internal class TamagotchiService
 
     private readonly RestClient _client = new(BaseUrl);
 
-    public async Task<Pokemon?> ObterMascoteAsync(string url)
+    public async Task<Tamagotchi?> ObterMascoteAsync(string url)
     {
-        return await _client.GetAsync<Pokemon>(new RestRequest(url), CancellationToken.None);
+        var pokemon = await _client.GetAsync<Pokemon>(new RestRequest(url), CancellationToken.None);
+        if (pokemon == null) return null;
+
+        return new Tamagotchi
+        {
+            Id = pokemon.Id,
+            Nome = pokemon.Name,
+            Habilidades = pokemon.Abilities
+                .Select(a => a.Ability.Name)
+                .ToArray(),
+            Tipos = pokemon.Types
+                .Select(t => t.Type.Name)
+                .ToArray(),
+            Altura = pokemon.Height,
+            Peso = pokemon.Weight
+        };
     }
 }
+
+internal record Pokemon
+(
+    int Id,
+    string Name,
+    Abilities[] Abilities,
+    PokemonTypes[] Types,
+    int Height,
+    int Weight
+);
+
+internal record PokemonTypes
+(
+    PokemonTypeResponse Type
+);
+
+internal record PokemonTypeResponse
+(
+    string Name,
+    string Url
+);
+
+internal record Abilities
+(
+    Ability Ability,
+    bool IsHidden
+);
+
+internal record Ability
+(
+    string Name,
+    string Url
+);
