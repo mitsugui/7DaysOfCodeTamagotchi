@@ -17,12 +17,12 @@ internal class TamagotchiService
         return new Tamagotchi
         {
             Id = pokemon.Id,
-            Nome = pokemon.Name,
+            Nome = pokemon.Name.ToPascalCase(),
             Habilidades = pokemon.Abilities
-                .Select(a => a.Ability.Name)
+                .Select(a => a.Ability.Name.ToPascalCase())
                 .ToArray(),
             Tipos = pokemon.Types
-                .Select(t => t.Type.Name)
+                .Select(t => t.Type.Name.ToPascalCase())
                 .ToArray(),
             Altura = pokemon.Height,
             Peso = pokemon.Weight

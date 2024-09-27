@@ -20,38 +20,44 @@ internal class TamagotchiController
     private readonly TamagotchiView _view;
     private readonly TamagotchiService _service;
 
+    private string? _nomeJogador;
+    private string? _nomeMascoteEscolhidoAdocao;
+    private Tamagotchi? _mascoteEscolhidoInteragir;
+
     public TamagotchiController(TamagotchiView view, TamagotchiService service)
     {
         _view = view;
         _service = service;
-
-        _view.Pokemons = Pokemons.Keys.ToList();
     }
 
     public async Task JogarAsync()
     {
         _view.MostrarBoasVindas();
 
-        _view.PedirNomeJogador();
-        if (_view.NomeJogador == null) return;
+        _nomeJogador = _view.PedirNomeJogador();
+        if (_nomeJogador == null) return;
 
-        var mascotesAdotados = new List<string>();
+        var mascotesAdotados = new List<Tamagotchi>();
         while (true)
         {
-            var opcao = _view.MostrarMenuPrincipal();
+            var opcao = _view.MostrarMenuPrincipal(_nomeJogador);
             switch (opcao)
             {
                 case TamagotchiView.OpcoesMenuPrincipal.AdotarMascote:
-                    _view.MostrarMenuEscolhaMascote();
-                    if (_view.MascoteEscolhido != null)
+                    _nomeMascoteEscolhidoAdocao = _view.MostrarMenuEscolhaMascoteAdocao(_nomeJogador, Pokemons.Keys.ToList());
+                    if (_nomeMascoteEscolhidoAdocao != null)
                     {
-                        var url = Pokemons[_view.MascoteEscolhido];
-                        var mascoteAdotado = await MostrarMenuAdotarMascoteAsync(_view.MascoteEscolhido, url);
+                        var url = Pokemons[_nomeMascoteEscolhidoAdocao];
+                        var mascoteAdotado = await AdotarMascoteAsync(_nomeJogador, _nomeMascoteEscolhidoAdocao, url);
                         if (mascoteAdotado != null) mascotesAdotados.Add(mascoteAdotado);
                     }
                     break;
                 case TamagotchiView.OpcoesMenuPrincipal.VerMascotes:
-                    _view.MostrarMeusMascotes(mascotesAdotados);
+                    _mascoteEscolhidoInteragir = _view.MostrarMenuEscolhaMascoteInteragir(_nomeJogador, mascotesAdotados);
+                    if (_mascoteEscolhidoInteragir != null)
+                    {
+                        InteragirComMascote(_nomeJogador, _mascoteEscolhidoInteragir);
+                    }                 
                     break;
                 case TamagotchiView.OpcoesMenuPrincipal.Sair:
                     return;
@@ -59,27 +65,50 @@ internal class TamagotchiController
         }
     }
 
-    public async Task<string?> MostrarMenuAdotarMascoteAsync(string mascote, string url)
+    public async Task<Tamagotchi?> AdotarMascoteAsync(string nomeJogador, string nomeMascote, string url)
     {
-        string? mascoteAdotado = null;
+        Tamagotchi? mascoteAdotado = null;
         while (mascoteAdotado == null)
         {
-            var opcao = _view.MostrarMenuMascote();
+            var opcao = _view.MostrarMenuMascoteAdotar(nomeJogador, nomeMascote);
             switch (opcao)
             {
-                case TamagotchiView.OpcoesMenuMascote.SaberMais:
-                    var mascoteResponse = await _service.ObterMascoteAsync(url);
-                    _view.MostrarDetalhesDoMascote(mascoteResponse);
+                case TamagotchiView.OpcoesMenuAdotarMascote.SaberMais:
+                    var mascote = await _service.ObterMascoteAsync(url);
+                    _view.MostrarDetalhesDoMascote(mascote);
                     break;
-                case TamagotchiView.OpcoesMenuMascote.Adotar:
-                    _view.MostrarMascoteAdotado();
-                    mascoteAdotado = mascote;
+                case TamagotchiView.OpcoesMenuAdotarMascote.Adotar:
+                    mascoteAdotado = await _service.ObterMascoteAsync(url);
+                    _view.MostrarMensagemMascoteAdotado(nomeJogador);
                     break;
-                case TamagotchiView.OpcoesMenuMascote.Voltar:
+                case TamagotchiView.OpcoesMenuAdotarMascote.Voltar:
                     return null;
             }
         }
 
         return mascoteAdotado;
+    }
+
+    public void InteragirComMascote(string nomeJogador, Tamagotchi mascoteInteragir)
+    {
+        while(true)
+        {
+            var opcao = _view.MostrarMenuInteragirComMascote(nomeJogador, mascoteInteragir);
+            switch (opcao)
+            {
+                case TamagotchiView.OpcoesMenuInteragirMascote.SaberMais:
+                    _view.MostrarDetalhesDoMascote(mascoteInteragir);
+                    break;
+                // case TamagotchiView.OpcoesMenuInteragirMascote.Alimentar:
+                //     _view.MascoteEscolhidoBrincar
+                //     _view.MostrarStatus(_view.MascoteEscolhidoBrincar.StatusFome);
+                //     break;
+                // case TamagotchiView.OpcoesMenuInteragirMascote.Brincar:
+                //     _view.MostrarStatus(_view.MascoteEscolhidoBrincar.StatusHumor);
+                //     break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.Voltar:
+                    return;
+            }
+        }
     }
 }

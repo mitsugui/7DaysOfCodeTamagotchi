@@ -11,36 +11,38 @@ internal class TamagotchiView
         Sair
     }
 
-    public enum OpcoesMenuMascote : byte
+    public enum OpcoesMenuAdotarMascote : byte
     {
         SaberMais = 1,
         Adotar = 2,
         Voltar = 3
     }
 
-    public IReadOnlyList<string>? Pokemons { get; set; }
-
-    public string? NomeJogador { get; set; }
-
-    public string? MascoteEscolhido { get; set; }
+    public enum OpcoesMenuInteragirMascote : byte
+    {
+        SaberMais = 1,
+        Alimentar,
+        Brincar,
+        Voltar
+    }
 
     public void MostrarBoasVindas()
     {
     }
 
-    public void PedirNomeJogador()
+    public string? PedirNomeJogador()
     {
         Console.Clear();
         Console.WriteLine("Qual o seu nome?");
 
-        NomeJogador = Console.ReadLine();
+        return Console.ReadLine();
     }
 
-    public OpcoesMenuPrincipal? MostrarMenuPrincipal()
+    public OpcoesMenuPrincipal? MostrarMenuPrincipal(string nomeJogador)
     {
         Console.Clear();
         Console.WriteLine("---------------------- MENU ----------------------");
-        Console.WriteLine($"{NomeJogador}. Você deseja:");
+        Console.WriteLine($"{nomeJogador}. Você deseja:");
         Console.WriteLine("1. Adotar um mascote.");
         Console.WriteLine("2. Ver seus mascotes.");
         Console.WriteLine("3. Sair.");
@@ -60,38 +62,37 @@ internal class TamagotchiView
         }
     }
 
-    public void MostrarMenuEscolhaMascote()
+    public string? MostrarMenuEscolhaMascoteAdocao(string nomeJogador, IReadOnlyList<string> pokemons)
     {
-        if (Pokemons == null) return;
-
         Console.Clear();
         Console.WriteLine("---------------- ADOTAR UM MASCOTE ---------------");
-        Console.WriteLine($"{NomeJogador}. Escolha uma espécie:");
-        for (var i = 0; i < Pokemons.Count; i++)
+        Console.WriteLine($"{nomeJogador}. Escolha uma espécie:");
+        for (var i = 0; i < pokemons.Count; i++)
         {
-            Console.WriteLine($"{i + 1} - {Pokemons[i]}");
+            Console.WriteLine($"{i + 1} - {pokemons[i]}");
         }
-        
+
         var opcao = Console.ReadLine();
         if (int.TryParse(opcao, out var indiceEscolha)
             && indiceEscolha >= 1
-            && indiceEscolha <= Pokemons.Count)
+            && indiceEscolha <= pokemons.Count)
         {
-            MascoteEscolhido = Pokemons[indiceEscolha - 1];
+            return pokemons[indiceEscolha - 1];
         }
         else
         {
             Console.WriteLine("Mascote inválido.");
         }
+        return null;
     }
 
-    public OpcoesMenuMascote? MostrarMenuMascote()
+    public OpcoesMenuAdotarMascote? MostrarMenuMascoteAdotar(string nomeJogador, string mascoteEscolhidoAdocao)
     {
         Console.Clear();
         Console.WriteLine(new string('-', 50));
-        Console.WriteLine($"{NomeJogador}. Você deseja:");
-        Console.WriteLine($"1. Saber mais sobre: {MascoteEscolhido}.");
-        Console.WriteLine($"2. Adotar: {MascoteEscolhido}.");
+        Console.WriteLine($"{nomeJogador}. Você deseja:");
+        Console.WriteLine($"1. Saber mais sobre: {mascoteEscolhidoAdocao}.");
+        Console.WriteLine($"2. Adotar: {mascoteEscolhidoAdocao}.");
         Console.WriteLine("3. Voltar.");
 
         var opcao = Console.ReadLine();
@@ -99,7 +100,7 @@ internal class TamagotchiView
             && indiceEscolha > 0
             && indiceEscolha <= 3)
         {
-            return (OpcoesMenuMascote)indiceEscolha;
+            return (OpcoesMenuAdotarMascote)indiceEscolha;
         }
         else
         {
@@ -108,14 +109,69 @@ internal class TamagotchiView
         }
     }
 
-    public void MostrarMascoteAdotado()
+    public void MostrarMensagemMascoteAdotado(string nomeJogador)
     {
-        Console.WriteLine($"{NomeJogador}. Mascote adotado com sucesso, o ovo está chocando:");
+        Console.WriteLine($"{nomeJogador}. Mascote adotado com sucesso, o ovo está chocando:");
 
 
         Console.WriteLine("");
         Console.WriteLine("Pressione qualquer tecla para voltar...");
         Console.ReadKey();
+    }
+
+    public Tamagotchi? MostrarMenuEscolhaMascoteInteragir(string nomeJogador, IReadOnlyList<Tamagotchi> mascotesAdotados)
+    {
+        if (mascotesAdotados.Count == 0)
+        {
+            Console.WriteLine($"{nomeJogador}. Você não adotou nenhum pokemon.");
+            Console.ReadKey();
+            return null;
+        }
+
+        Console.Clear();
+        Console.WriteLine("------------------- SEUS MASCOTE -----------------");
+        Console.WriteLine($"{nomeJogador}. Escolha um mascote para brincar:");
+        for (var i = 0; i < mascotesAdotados.Count; i++)
+        {
+            Console.WriteLine($"{i + 1} - {mascotesAdotados[i].Nome}");
+        }
+
+        var opcao = Console.ReadLine();
+        if (int.TryParse(opcao, out var indiceEscolha)
+            && indiceEscolha >= 1
+            && indiceEscolha <= mascotesAdotados.Count)
+        {
+            return mascotesAdotados[indiceEscolha - 1];
+        }
+        else
+        {
+            Console.WriteLine("Mascote inválido.");
+        }
+        return null;
+    }
+
+    public OpcoesMenuInteragirMascote MostrarMenuInteragirComMascote(string nomeJogador, Tamagotchi mascoteEscolhido)
+    {
+        Console.Clear();
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine($"{nomeJogador}. Você deseja:");
+        Console.WriteLine($"1. Saber mais sobre {mascoteEscolhido.Nome}.");
+        Console.WriteLine($"2. Alimentar {mascoteEscolhido.Nome}.");
+        Console.WriteLine($"3. Brincar com {mascoteEscolhido.Nome}.");
+        Console.WriteLine("4. Voltar.");
+
+        var opcao = Console.ReadLine();
+        if (int.TryParse(opcao, out var indiceEscolha)
+            && indiceEscolha > 0
+            && indiceEscolha <= 4)
+        {
+            return (OpcoesMenuInteragirMascote)indiceEscolha;
+        }
+        else
+        {
+            Console.WriteLine("Opção inválida.");
+            return OpcoesMenuInteragirMascote.Voltar;
+        }
     }
 
     public void MostrarDetalhesDoMascote(Tamagotchi? mascote)
@@ -125,6 +181,11 @@ internal class TamagotchiView
         Console.WriteLine($@"Nome do Pokemon: {mascote?.Nome}");
         Console.WriteLine($" Altura: {mascote?.Altura}");
         Console.WriteLine($" Peso: {mascote?.Peso}");
+
+        Console.WriteLine($" Humor:{mascote?.StatusHumor}");
+        Console.WriteLine($" Alimentação: {mascote?.StatusFome}");
+        Console.WriteLine($" Sono: {mascote?.StatusSono}");
+
         if (mascote?.Tipos != null)
         {
             Console.WriteLine($" Tipos:");
@@ -144,24 +205,6 @@ internal class TamagotchiView
 
         Console.WriteLine("");
         Console.WriteLine("Pressione qualquer tecla para voltar...");
-        Console.ReadKey();
-    }
-
-    public void MostrarMeusMascotes(IReadOnlyCollection<string> mascotesAdotados)
-    {
-        Console.Clear();
-        if (mascotesAdotados.Count == 0)
-        {
-            Console.WriteLine($"{NomeJogador}. Você não adotou nenhum pokemon.");
-            Console.ReadKey();
-            return;
-        }
-
-        Console.WriteLine("---------------- MASCOTES ADOTADOS ---------------");
-        foreach (var mascote in mascotesAdotados)
-        {
-            Console.WriteLine($"- {mascote}");
-        }
         Console.ReadKey();
     }
 }
