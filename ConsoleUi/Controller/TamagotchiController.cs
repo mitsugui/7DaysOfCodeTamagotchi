@@ -57,7 +57,7 @@ internal class TamagotchiController
                     if (_mascoteEscolhidoInteragir != null)
                     {
                         InteragirComMascote(_nomeJogador, _mascoteEscolhidoInteragir);
-                    }                 
+                    }
                     break;
                 case TamagotchiView.OpcoesMenuPrincipal.Sair:
                     return;
@@ -75,7 +75,7 @@ internal class TamagotchiController
             {
                 case TamagotchiView.OpcoesMenuAdotarMascote.SaberMais:
                     var mascote = await _service.ObterMascoteAsync(url);
-                    _view.MostrarDetalhesDoMascote(mascote);
+                    if (mascote != null) _view.MostrarDetalhesDoMascote(mascote);
                     break;
                 case TamagotchiView.OpcoesMenuAdotarMascote.Adotar:
                     mascoteAdotado = await _service.ObterMascoteAsync(url);
@@ -91,7 +91,7 @@ internal class TamagotchiController
 
     public void InteragirComMascote(string nomeJogador, Tamagotchi mascoteInteragir)
     {
-        while(true)
+        while (true)
         {
             var opcao = _view.MostrarMenuInteragirComMascote(nomeJogador, mascoteInteragir);
             switch (opcao)
@@ -99,15 +99,36 @@ internal class TamagotchiController
                 case TamagotchiView.OpcoesMenuInteragirMascote.SaberMais:
                     _view.MostrarDetalhesDoMascote(mascoteInteragir);
                     break;
-                // case TamagotchiView.OpcoesMenuInteragirMascote.Alimentar:
-                //     _view.MascoteEscolhidoBrincar
-                //     _view.MostrarStatus(_view.MascoteEscolhidoBrincar.StatusFome);
-                //     break;
-                // case TamagotchiView.OpcoesMenuInteragirMascote.Brincar:
-                //     _view.MostrarStatus(_view.MascoteEscolhidoBrincar.StatusHumor);
-                //     break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.Alimentar when mascoteInteragir.EstaDormindo:
+                    _view.MostrarMensagemMascoteEstaDormindo(mascoteInteragir);
+                    break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.Alimentar:
+                    mascoteInteragir.Alimentar();
+                    _view.MostrarMensagemMascoteAlimentado(mascoteInteragir);
+                    break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.Brincar when mascoteInteragir.EstaDormindo:
+                    _view.MostrarMensagemMascoteEstaDormindo(mascoteInteragir);
+                    break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.Brincar:
+                    mascoteInteragir.Brincar();
+                    _view.MostrarMensagemMascoteBrincou(mascoteInteragir);
+                    break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.DormirOuAcordar:
+                    if (mascoteInteragir.EstaDormindo)
+                    {
+                        mascoteInteragir.Acordar();
+                        _view.MostrarMensagemMascoteAcordou(mascoteInteragir);
+                    }
+                    else
+                    {
+                        mascoteInteragir.Dormir();
+                        _view.MostrarMensagemMascoteDormiu(mascoteInteragir);
+                    }
+                    break;
                 case TamagotchiView.OpcoesMenuInteragirMascote.Voltar:
                     return;
+                default:
+                    break;
             }
         }
     }

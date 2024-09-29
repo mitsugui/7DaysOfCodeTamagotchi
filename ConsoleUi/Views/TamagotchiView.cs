@@ -23,6 +23,7 @@ internal class TamagotchiView
         SaberMais = 1,
         Alimentar,
         Brincar,
+        DormirOuAcordar,
         Voltar
     }
 
@@ -69,7 +70,7 @@ internal class TamagotchiView
         Console.WriteLine($"{nomeJogador}. Escolha uma espécie:");
         for (var i = 0; i < pokemons.Count; i++)
         {
-            Console.WriteLine($"{i + 1} - {pokemons[i]}");
+            Console.WriteLine($"{i + 1}. {pokemons[i]}");
         }
 
         var opcao = Console.ReadLine();
@@ -113,9 +114,6 @@ internal class TamagotchiView
     {
         Console.WriteLine($"{nomeJogador}. Mascote adotado com sucesso, o ovo está chocando:");
 
-
-        Console.WriteLine("");
-        Console.WriteLine("Pressione qualquer tecla para voltar...");
         Console.ReadKey();
     }
 
@@ -133,7 +131,7 @@ internal class TamagotchiView
         Console.WriteLine($"{nomeJogador}. Escolha um mascote para brincar:");
         for (var i = 0; i < mascotesAdotados.Count; i++)
         {
-            Console.WriteLine($"{i + 1} - {mascotesAdotados[i].Nome}");
+            Console.WriteLine($"{i + 1}. {mascotesAdotados[i].Nome}");
         }
 
         var opcao = Console.ReadLine();
@@ -158,12 +156,15 @@ internal class TamagotchiView
         Console.WriteLine($"1. Saber mais sobre {mascoteEscolhido.Nome}.");
         Console.WriteLine($"2. Alimentar {mascoteEscolhido.Nome}.");
         Console.WriteLine($"3. Brincar com {mascoteEscolhido.Nome}.");
-        Console.WriteLine("4. Voltar.");
+        Console.WriteLine(mascoteEscolhido.EstaDormindo
+            ? $"4. Acordar {mascoteEscolhido.Nome}."
+            : $"4. Fazer {mascoteEscolhido.Nome} dormir.");
+        Console.WriteLine("5. Voltar.");
 
         var opcao = Console.ReadLine();
         if (int.TryParse(opcao, out var indiceEscolha)
             && indiceEscolha > 0
-            && indiceEscolha <= 4)
+            && indiceEscolha <= Enum.GetValues<OpcoesMenuInteragirMascote>().Length)
         {
             return (OpcoesMenuInteragirMascote)indiceEscolha;
         }
@@ -174,19 +175,23 @@ internal class TamagotchiView
         }
     }
 
-    public void MostrarDetalhesDoMascote(Tamagotchi? mascote)
+    public void MostrarDetalhesDoMascote(Tamagotchi mascote)
     {
         Console.Clear();
         Console.WriteLine(new string('-', 50));
-        Console.WriteLine($@"Nome do Pokemon: {mascote?.Nome}");
-        Console.WriteLine($" Altura: {mascote?.Altura}");
-        Console.WriteLine($" Peso: {mascote?.Peso}");
+        Console.WriteLine($@"Nome do Pokemon: {mascote.Nome}");
+        Console.WriteLine($" Altura: {mascote.Altura}");
+        Console.WriteLine($" Peso: {mascote.Peso}");
+        Console.WriteLine("");
+        if (mascote.EstaDormindo == true)
+        {
+            Console.WriteLine(" DORMINDO Zzzzzz...");
+        }
+        Console.WriteLine($" Humor: {mascote.StatusHumor}");
+        Console.WriteLine($" Alimentação: {mascote.StatusFome}");
+        Console.WriteLine($" Sono: {mascote.StatusSono}");
 
-        Console.WriteLine($" Humor:{mascote?.StatusHumor}");
-        Console.WriteLine($" Alimentação: {mascote?.StatusFome}");
-        Console.WriteLine($" Sono: {mascote?.StatusSono}");
-
-        if (mascote?.Tipos != null)
+        if (mascote.Tipos != null)
         {
             Console.WriteLine($" Tipos:");
             foreach (var tipo in mascote.Tipos)
@@ -194,7 +199,7 @@ internal class TamagotchiView
                 Console.WriteLine($" - {tipo}");
             }
         }
-        if (mascote?.Habilidades != null)
+        if (mascote.Habilidades != null)
         {
             Console.WriteLine($" Habilidades:");
             foreach (var habilidade in mascote.Habilidades)
@@ -202,9 +207,40 @@ internal class TamagotchiView
                 Console.WriteLine($" - {habilidade.ToUpper()}");
             }
         }
+        Console.ReadKey();
+    }
 
-        Console.WriteLine("");
-        Console.WriteLine("Pressione qualquer tecla para voltar...");
+    public void MostrarMensagemMascoteAlimentado(Tamagotchi mascote)
+    {
+        Console.WriteLine($"{mascote.Nome} Alimentado!");
+        Console.WriteLine($"      (=^.^=)      ");
+        Console.ReadKey();
+    }
+
+    public void MostrarMensagemMascoteBrincou(Tamagotchi mascote)
+    {
+        Console.WriteLine($"{mascote.Nome} Brincou!");
+        Console.WriteLine($"      (=^.^=)      ");
+        Console.ReadKey();
+    }
+
+    internal void MostrarMensagemMascoteAcordou(Tamagotchi mascote)
+    {
+        Console.WriteLine($"{mascote.Nome} acordou!");
+        Console.WriteLine(mascote.StatusSono);
+        Console.ReadKey();
+    }
+
+    internal void MostrarMensagemMascoteDormiu(Tamagotchi mascote)
+    {
+        Console.WriteLine($"{mascote.Nome} dormiu! Zzzzzz...");
+        Console.WriteLine($"");
+        Console.ReadKey();
+    }
+
+    internal void MostrarMensagemMascoteEstaDormindo(Tamagotchi mascote)
+    {
+        Console.WriteLine($"{mascote.Nome} Zzzzz..");
         Console.ReadKey();
     }
 }
