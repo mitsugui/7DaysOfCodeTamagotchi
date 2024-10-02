@@ -30,3 +30,7 @@ Foi criada uma classe para imprimir as opções do menu e responder às escolhas
 Dia 4: Organizar em Model, View e Controller.
 
 Organização da lógica do jogo no Controller. Separação da impressão de mensagens e captura de opções para a view.
+
+Dia 5: Implementar interação com o mascote.
+
+Adição de menu para interagir com o mascote.
