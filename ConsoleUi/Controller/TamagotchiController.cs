@@ -19,6 +19,7 @@ internal class TamagotchiController
 
     private readonly TamagotchiView _view;
     private readonly TamagotchiService _service;
+    private readonly GptChatCompletionService _gptService;
 
     private string? _nomeJogador;
     private string? _nomeMascoteEscolhidoAdocao;
@@ -28,6 +29,7 @@ internal class TamagotchiController
     {
         _view = view;
         _service = service;
+        _gptService = new GptChatCompletionService();
     }
 
     public async Task JogarAsync()
@@ -93,41 +95,44 @@ internal class TamagotchiController
     {
         while (true)
         {
-            var opcao = _view.MostrarMenuInteragirComMascote(nomeJogador, mascoteInteragir);
+            var opcao = _view.MostrarMenuInteragirComMascote(nomeJogador, mascoteInteragir, out var outraAcao);
+
+            var textoAcao = opcao == TamagotchiView.OpcoesMenuInteragirMascote.Outro
+                ? outraAcao
+                : opcao == TamagotchiView.OpcoesMenuInteragirMascote.DormirOuAcordar
+                    ? mascoteInteragir.EstaDormindo
+                        ? "Acordar"
+                        : "Dormir"
+                    : opcao.ToString();
+
+            var prompt = new PromptAcao()
+            {
+                Acao = textoAcao,
+                Humor = mascoteInteragir.Humor,
+                Fome = mascoteInteragir.Fome,
+                Sono = mascoteInteragir.Sono,
+                EstaDormindo = mascoteInteragir.EstaDormindo
+            };
+
             switch (opcao)
             {
                 case TamagotchiView.OpcoesMenuInteragirMascote.SaberMais:
                     _view.MostrarDetalhesDoMascote(mascoteInteragir);
                     break;
-                case TamagotchiView.OpcoesMenuInteragirMascote.Alimentar when mascoteInteragir.EstaDormindo:
-                    _view.MostrarMensagemMascoteEstaDormindo(mascoteInteragir);
-                    break;
-                case TamagotchiView.OpcoesMenuInteragirMascote.Alimentar:
-                    mascoteInteragir.Alimentar();
-                    _view.MostrarMensagemMascoteAlimentado(mascoteInteragir);
-                    break;
-                case TamagotchiView.OpcoesMenuInteragirMascote.Brincar when mascoteInteragir.EstaDormindo:
-                    _view.MostrarMensagemMascoteEstaDormindo(mascoteInteragir);
-                    break;
-                case TamagotchiView.OpcoesMenuInteragirMascote.Brincar:
-                    mascoteInteragir.Brincar();
-                    _view.MostrarMensagemMascoteBrincou(mascoteInteragir);
-                    break;
                 case TamagotchiView.OpcoesMenuInteragirMascote.DormirOuAcordar:
-                    if (mascoteInteragir.EstaDormindo)
-                    {
-                        mascoteInteragir.Acordar();
-                        _view.MostrarMensagemMascoteAcordou(mascoteInteragir);
-                    }
-                    else
-                    {
-                        mascoteInteragir.Dormir();
-                        _view.MostrarMensagemMascoteDormiu(mascoteInteragir);
-                    }
+                    _gptService.GetGpt4CompletionAsync(mascoteInteragir, prompt)
+                        .GetAwaiter()
+                        .GetResult();
+                    mascoteInteragir.DormirOuAcordar();
+                    _view.MostrarMensagemInteracao(mascoteInteragir);
                     break;
                 case TamagotchiView.OpcoesMenuInteragirMascote.Voltar:
                     return;
                 default:
+                    _gptService.GetGpt4CompletionAsync(mascoteInteragir, prompt)
+                        .GetAwaiter()
+                        .GetResult();
+                    _view.MostrarMensagemInteracao(mascoteInteragir);
                     break;
             }
         }

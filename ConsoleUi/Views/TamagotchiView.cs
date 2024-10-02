@@ -24,11 +24,16 @@ internal class TamagotchiView
         Alimentar,
         Brincar,
         DormirOuAcordar,
-        Voltar
+        Voltar,
+        Outro
     }
 
     public void MostrarBoasVindas()
     {
+        Console.Clear();
+        Console.WriteLine("Bem-vindo ao Tamagotchi Pokemon!");
+        Console.WriteLine("Pressione qualquer tecla para continuar...");
+        Console.ReadKey();
     }
 
     public string? PedirNomeJogador()
@@ -148,7 +153,7 @@ internal class TamagotchiView
         return null;
     }
 
-    public OpcoesMenuInteragirMascote MostrarMenuInteragirComMascote(string nomeJogador, Tamagotchi mascoteEscolhido)
+    public OpcoesMenuInteragirMascote MostrarMenuInteragirComMascote(string nomeJogador, Tamagotchi mascoteEscolhido, out string? outraAcao)
     {
         Console.Clear();
         Console.WriteLine(new string('-', 50));
@@ -160,18 +165,20 @@ internal class TamagotchiView
             ? $"4. Acordar {mascoteEscolhido.Nome}."
             : $"4. Fazer {mascoteEscolhido.Nome} dormir.");
         Console.WriteLine("5. Voltar.");
+        Console.WriteLine("Ou escreva uma mensagem qualquer para o mascote.");
 
         var opcao = Console.ReadLine();
         if (int.TryParse(opcao, out var indiceEscolha)
             && indiceEscolha > 0
             && indiceEscolha <= Enum.GetValues<OpcoesMenuInteragirMascote>().Length)
         {
+            outraAcao = null;
             return (OpcoesMenuInteragirMascote)indiceEscolha;
         }
         else
         {
-            Console.WriteLine("Opção inválida.");
-            return OpcoesMenuInteragirMascote.Voltar;
+            outraAcao = opcao;
+            return OpcoesMenuInteragirMascote.Outro;
         }
     }
 
@@ -210,37 +217,11 @@ internal class TamagotchiView
         Console.ReadKey();
     }
 
-    public void MostrarMensagemMascoteAlimentado(Tamagotchi mascote)
+    internal void MostrarMensagemInteracao(Tamagotchi mascote)
     {
-        Console.WriteLine($"{mascote.Nome} Alimentado!");
-        Console.WriteLine($"      (=^.^=)      ");
-        Console.ReadKey();
-    }
-
-    public void MostrarMensagemMascoteBrincou(Tamagotchi mascote)
-    {
-        Console.WriteLine($"{mascote.Nome} Brincou!");
-        Console.WriteLine($"      (=^.^=)      ");
-        Console.ReadKey();
-    }
-
-    internal void MostrarMensagemMascoteAcordou(Tamagotchi mascote)
-    {
-        Console.WriteLine($"{mascote.Nome} acordou!");
-        Console.WriteLine(mascote.StatusSono);
-        Console.ReadKey();
-    }
-
-    internal void MostrarMensagemMascoteDormiu(Tamagotchi mascote)
-    {
-        Console.WriteLine($"{mascote.Nome} dormiu! Zzzzzz...");
-        Console.WriteLine($"");
-        Console.ReadKey();
-    }
-
-    internal void MostrarMensagemMascoteEstaDormindo(Tamagotchi mascote)
-    {
-        Console.WriteLine($"{mascote.Nome} Zzzzz..");
+        Console.Clear();
+        Console.WriteLine($"{mascote.Emoji}");
+        Console.WriteLine($@"{mascote.Nome}: {mascote.Mensagem}");
         Console.ReadKey();
     }
 }

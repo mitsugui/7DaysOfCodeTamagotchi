@@ -34,3 +34,7 @@ Organização da lógica do jogo no Controller. Separação da impressão de men
 Dia 5: Implementar interação com o mascote.
 
 Adição de menu para interagir com o mascote.
+
+Dia 6: Extra - Integração com ChatGpt.
+
+Colocação de serviço para chamar API do ChatGpt e interagir com o usuário.
