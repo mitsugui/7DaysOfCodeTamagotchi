@@ -38,3 +38,10 @@ Adição de menu para interagir com o mascote.
 Dia 6: Extra - Integração com ChatGpt.
 
 Colocação de serviço para chamar API do ChatGpt e interagir com o usuário.
+
+Para executar o acesso ao ChatGpt é necessário registrar as seguintes variáveis de ambiente:
+``` shell
+SET API_KEY=<project api key>
+SET API_ORGANIZATION=<organization id>
+SET API_PROJECT_ID=<project id>
+```

@@ -6,8 +6,29 @@ namespace ConsoleUi.Service;
 internal class TamagotchiService
 {
     private const string BaseUrl = @"https://pokeapi.co/api/v2/";
+    
+    private static readonly Dictionary<string, string> Pokemons = new()
+    {
+        {"Pikachu", "pokemon/25/"},
+        {"Bulbasaur", "pokemon/1/"},
+        {"Charmander", "pokemon/4/"},
+        {"Ivysaur", "pokemon/2/"},
+        {"Pidgeot", "pokemon/18/"},
+        {"Psyduck", "pokemon/54/"},
+        {"Squirtle", "pokemon/7/"},
+    };
 
     private readonly RestClient _client = new(BaseUrl);
+
+    public IReadOnlyCollection<string> ListarPokemons()
+    {
+        return Pokemons.Keys;
+    }
+
+    public string? ObterUrlPokemon(string pokemon)
+    {
+        return Pokemons.TryGetValue(pokemon, out var url) ? url : null;
+    } 
 
     public async Task<Tamagotchi?> ObterMascoteAsync(string url)
     {

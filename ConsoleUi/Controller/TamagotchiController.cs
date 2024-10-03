@@ -1,25 +1,16 @@
 using ConsoleUi.Service;
 using ConsoleUi.Views;
 using ConsoleUi.Model;
+using ConsoleUi.Data;
 
 namespace ConsoleUi.Controller;
 
 internal class TamagotchiController
 {
-    private static readonly Dictionary<string, string> Pokemons = new()
-    {
-        {"Pikachu", "pokemon/25/"},
-        {"Bulbasaur", "pokemon/1/"},
-        {"Charmander", "pokemon/4/"},
-        {"Ivysaur", "pokemon/2/"},
-        {"Pidgeot", "pokemon/18/"},
-        {"Psyduck", "pokemon/54/"},
-        {"Squirtle", "pokemon/7/"},
-    };
-
     private readonly TamagotchiView _view;
     private readonly TamagotchiService _service;
     private readonly GptChatCompletionService _gptService;
+    private readonly RepositorioMascotes _repositorio = new();
 
     private string? _nomeJogador;
     private string? _nomeMascoteEscolhidoAdocao;
@@ -39,27 +30,28 @@ internal class TamagotchiController
         _nomeJogador = _view.PedirNomeJogador();
         if (_nomeJogador == null) return;
 
-        var mascotesAdotados = new List<Tamagotchi>();
         while (true)
         {
             var opcao = _view.MostrarMenuPrincipal(_nomeJogador);
             switch (opcao)
             {
                 case TamagotchiView.OpcoesMenuPrincipal.AdotarMascote:
-                    _nomeMascoteEscolhidoAdocao = _view.MostrarMenuEscolhaMascoteAdocao(_nomeJogador, Pokemons.Keys.ToList());
-                    if (_nomeMascoteEscolhidoAdocao != null)
-                    {
-                        var url = Pokemons[_nomeMascoteEscolhidoAdocao];
-                        var mascoteAdotado = await AdotarMascoteAsync(_nomeJogador, _nomeMascoteEscolhidoAdocao, url);
-                        if (mascoteAdotado != null) mascotesAdotados.Add(mascoteAdotado);
-                    }
+                    var pokemons = _service.ListarPokemons();
+                    _nomeMascoteEscolhidoAdocao = _view.MostrarMenuEscolhaMascoteAdocao(_nomeJogador, pokemons.ToList());
+                    if (_nomeMascoteEscolhidoAdocao == null) break;
+
+                    var url = _service.ObterUrlPokemon(_nomeMascoteEscolhidoAdocao);
+                    if (url == null) break;
+
+                    var mascoteAdotado = await AdotarMascoteAsync(_nomeJogador, _nomeMascoteEscolhidoAdocao, url);
+                    if (mascoteAdotado != null) await _repositorio.SalvarMascoteAdotadoAsync(_nomeJogador, mascoteAdotado);
                     break;
                 case TamagotchiView.OpcoesMenuPrincipal.VerMascotes:
+                    var mascotesAdotados = await _repositorio.ListarMascotesAdotadosAsync(_nomeJogador);
                     _mascoteEscolhidoInteragir = _view.MostrarMenuEscolhaMascoteInteragir(_nomeJogador, mascotesAdotados);
-                    if (_mascoteEscolhidoInteragir != null)
-                    {
-                        InteragirComMascote(_nomeJogador, _mascoteEscolhidoInteragir);
-                    }
+                    if (_mascoteEscolhidoInteragir == null) break;
+
+                    await InteragirComMascoteAsync(_nomeJogador, _mascoteEscolhidoInteragir);
                     break;
                 case TamagotchiView.OpcoesMenuPrincipal.Sair:
                     return;
@@ -91,7 +83,7 @@ internal class TamagotchiController
         return mascoteAdotado;
     }
 
-    public void InteragirComMascote(string nomeJogador, Tamagotchi mascoteInteragir)
+    public async Task InteragirComMascoteAsync(string nomeJogador, Tamagotchi mascoteInteragir)
     {
         while (true)
         {
@@ -124,6 +116,7 @@ internal class TamagotchiController
                         .GetAwaiter()
                         .GetResult();
                     mascoteInteragir.DormirOuAcordar();
+                    await _repositorio.SalvarMascoteAdotadoAsync(nomeJogador, mascoteInteragir);
                     _view.MostrarMensagemInteracao(mascoteInteragir);
                     break;
                 case TamagotchiView.OpcoesMenuInteragirMascote.Voltar:
@@ -132,6 +125,7 @@ internal class TamagotchiController
                     _gptService.GetGpt4CompletionAsync(mascoteInteragir, prompt)
                         .GetAwaiter()
                         .GetResult();
+                    await _repositorio.SalvarMascoteAdotadoAsync(nomeJogador, mascoteInteragir);
                     _view.MostrarMensagemInteracao(mascoteInteragir);
                     break;
             }
