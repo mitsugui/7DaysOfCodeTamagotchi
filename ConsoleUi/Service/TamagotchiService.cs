@@ -39,6 +39,8 @@ internal class TamagotchiService
         {
             Id = pokemon.Id,
             Nome = pokemon.Name.ToPascalCase(),
+            Url = url,
+            Especie = pokemon.Name.ToPascalCase(),
             Habilidades = pokemon.Abilities
                 .Select(a => a.Ability.Name.ToPascalCase())
                 .ToArray(),

@@ -59,12 +59,12 @@ internal class TamagotchiController
         }
     }
 
-    public async Task<Tamagotchi?> AdotarMascoteAsync(string nomeJogador, string nomeMascote, string url)
+    public async Task<Tamagotchi?> AdotarMascoteAsync(string nomeJogador, string especiePokemon, string url)
     {
         Tamagotchi? mascoteAdotado = null;
         while (mascoteAdotado == null)
         {
-            var opcao = _view.MostrarMenuMascoteAdotar(nomeJogador, nomeMascote);
+            var opcao = _view.MostrarMenuMascoteAdotar(nomeJogador, especiePokemon);
             switch (opcao)
             {
                 case TamagotchiView.OpcoesMenuAdotarMascote.SaberMais:
@@ -73,7 +73,12 @@ internal class TamagotchiController
                     break;
                 case TamagotchiView.OpcoesMenuAdotarMascote.Adotar:
                     mascoteAdotado = await _service.ObterMascoteAsync(url);
-                    _view.MostrarMensagemMascoteAdotado(nomeJogador);
+                    if (mascoteAdotado == null) break;
+
+                    _view.MostrarMensagemMascoteAdotado(nomeJogador, out var nomeMascote);
+                    if (nomeMascote == null) break;
+
+                    mascoteAdotado.Nome = nomeMascote;
                     break;
                 case TamagotchiView.OpcoesMenuAdotarMascote.Voltar:
                     return null;
@@ -97,6 +102,8 @@ internal class TamagotchiController
                         : "Dormir"
                     : opcao.ToString();
 
+            if (textoAcao == null) return;
+
             var prompt = new PromptAcao()
             {
                 Acao = textoAcao,
@@ -116,8 +123,12 @@ internal class TamagotchiController
                         .GetAwaiter()
                         .GetResult();
                     mascoteInteragir.DormirOuAcordar();
+                    mascoteInteragir.RegistrarHistorico(textoAcao);
                     await _repositorio.SalvarMascoteAdotadoAsync(nomeJogador, mascoteInteragir);
-                    _view.MostrarMensagemInteracao(mascoteInteragir);
+                    _view.MostrarMensagemInteracao(nomeJogador, mascoteInteragir);
+                    break;
+                case TamagotchiView.OpcoesMenuInteragirMascote.VerConversas:
+                    _view.MostrarMensagemInteracao(nomeJogador, mascoteInteragir, 30);
                     break;
                 case TamagotchiView.OpcoesMenuInteragirMascote.Voltar:
                     return;
@@ -125,8 +136,9 @@ internal class TamagotchiController
                     _gptService.GetGpt4CompletionAsync(mascoteInteragir, prompt)
                         .GetAwaiter()
                         .GetResult();
+                    mascoteInteragir.RegistrarHistorico(textoAcao);
                     await _repositorio.SalvarMascoteAdotadoAsync(nomeJogador, mascoteInteragir);
-                    _view.MostrarMensagemInteracao(mascoteInteragir);
+                    _view.MostrarMensagemInteracao(nomeJogador, mascoteInteragir);
                     break;
             }
         }

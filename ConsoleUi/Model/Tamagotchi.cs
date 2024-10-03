@@ -3,8 +3,12 @@ namespace ConsoleUi.Model;
 
 public class Tamagotchi
 {
+    public record RegistroHistorico(string Acao, int Humor, int Fome, int Sono, string Mensagem, DateTimeOffset Horario);
+
     public int Id { get; init; }
-    public string Nome { get; init; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string Especie { get; init; } = string.Empty;
+    public string Url { get; init; } = string.Empty;
     public string[]? Habilidades { get; init; }
     public string[]? Tipos { get; init; }
     public int Altura { get; init; }
@@ -12,7 +16,6 @@ public class Tamagotchi
     public int Humor { get; internal set; }
     public int Fome { get; internal set; }
     public int Sono { get; internal set; }
-    public string Emoji { get; internal set; } = string.Empty;
     public string Mensagem { get; internal set; } = string.Empty;
 
     public DateTimeOffset? HorarioDormiu { get; private set; }
@@ -53,6 +56,8 @@ public class Tamagotchi
         }
     }
 
+    public List<RegistroHistorico> Historico { get; set; } = new();
+
     public void Mascote()
     {
         //Inicializa com valores aleatórios entre 1 e 10
@@ -65,5 +70,10 @@ public class Tamagotchi
     public void DormirOuAcordar()
     {
         HorarioDormiu = HorarioDormiu == null ? DateTimeOffset.Now : null;
+    }
+
+    public void RegistrarHistorico(string acao)
+    {
+        Historico.Add(new RegistroHistorico(acao, Humor, Fome, Sono, Mensagem, DateTimeOffset.Now));
     }
 }

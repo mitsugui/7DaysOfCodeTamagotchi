@@ -24,6 +24,7 @@ internal class TamagotchiView
         Alimentar,
         Brincar,
         DormirOuAcordar,
+        VerConversas,
         Voltar,
         Outro
     }
@@ -31,7 +32,11 @@ internal class TamagotchiView
     public void MostrarBoasVindas()
     {
         Console.Clear();
-        Console.WriteLine("Bem-vindo ao Tamagotchi Pokemon!");
+        Console.WriteLine("-------------------------------------------------");
+        Console.WriteLine("------- Bem-vindo ao Tamagotchi Pokemon! --------");
+        Console.WriteLine("-------------------------------------------------");
+        Console.WriteLine();
+        Console.WriteLine();
         Console.WriteLine("Pressione qualquer tecla para continuar...");
         Console.ReadKey();
     }
@@ -115,11 +120,19 @@ internal class TamagotchiView
         }
     }
 
-    public void MostrarMensagemMascoteAdotado(string nomeJogador)
+    public void MostrarMensagemMascoteAdotado(string nomeJogador, out string? nomeMascote)
     {
-        Console.WriteLine($"{nomeJogador}. Mascote adotado com sucesso, o ovo está chocando:");
+        Console.WriteLine($"{nomeJogador}. PARABÉNS! Mascote adotado com sucesso, o ovo está chocando...");
+        Console.WriteLine();
+        Console.WriteLine();
+        Console.WriteLine($"Quer dar um nome para seu mascote? Se sim, digite o nome. Se não aperte ENTER.");
+        Console.WriteLine();
 
-        Console.ReadKey();
+        nomeMascote = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(nomeMascote)) return;
+
+        Console.WriteLine($"Seu novo mascote se chama {nomeMascote}.");
     }
 
     public Tamagotchi? MostrarMenuEscolhaMascoteInteragir(string nomeJogador, IReadOnlyList<Tamagotchi> mascotesAdotados)
@@ -164,8 +177,10 @@ internal class TamagotchiView
         Console.WriteLine(mascoteEscolhido.EstaDormindo
             ? $"4. Acordar {mascoteEscolhido.Nome}."
             : $"4. Fazer {mascoteEscolhido.Nome} dormir.");
-        Console.WriteLine("5. Voltar.");
+        Console.WriteLine("5. Ver nossas conversas anteriores.");
+        Console.WriteLine("6. Voltar.");
         Console.WriteLine("Ou escreva uma mensagem qualquer para o mascote.");
+        Console.WriteLine();
 
         var opcao = Console.ReadLine();
         if (int.TryParse(opcao, out var indiceEscolha)
@@ -217,11 +232,31 @@ internal class TamagotchiView
         Console.ReadKey();
     }
 
-    internal void MostrarMensagemInteracao(Tamagotchi mascote)
+    internal void MostrarMensagemInteracao(string nomeJogador, Tamagotchi mascote, int tamanhoHistorico = 3)
     {
         Console.Clear();
-        Console.WriteLine($"{mascote.Emoji}");
-        Console.WriteLine($@"{mascote.Nome}: {mascote.Mensagem}");
+        var ultimasAcoes = mascote.Historico
+            .OrderByDescending(r => r.Horario)
+            .Take(tamanhoHistorico)
+            .OrderBy(r => r.Horario)
+            .ToList();
+
+        var horaRegistroAnterior = (DateTimeOffset?)null;
+        foreach (var registro in ultimasAcoes)
+        {
+            if (horaRegistroAnterior == null
+                || registro.Horario - horaRegistroAnterior > TimeSpan.FromMinutes(5))
+            {
+                Console.WriteLine($"{registro.Horario:dd/MM/yyyy HH:mm:ss}");
+                Console.WriteLine();
+            }
+
+            Console.WriteLine($@"{nomeJogador}: {registro.Acao}");
+            Console.WriteLine($@"{mascote.Nome}: {registro.Mensagem}");
+            Console.WriteLine();
+
+            horaRegistroAnterior = registro.Horario;
+        }
         Console.ReadKey();
     }
 }

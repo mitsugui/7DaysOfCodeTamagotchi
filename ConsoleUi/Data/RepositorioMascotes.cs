@@ -6,18 +6,18 @@ namespace ConsoleUi.Data;
 internal class RepositorioMascotes
 {
     private const string _caminhoArquivo = "mascotes.json";
-    private Dictionary<string, List<Tamagotchi>>? _mascotesAdotados = null;
+    private Dictionary<string, Dictionary<string, Tamagotchi>>? _mascotesAdotados = null;
 
     public async Task SalvarMascoteAdotadoAsync(string usuario, Tamagotchi mascote)
     {
         var mascotesAdotados = await CarregarMascotesAsync();
         if (mascotesAdotados.TryGetValue(usuario, out var mascotes))
         {
-            mascotes.Add(mascote);
+            mascotes[mascote.Nome] = mascote;
         }
         else
         {
-            mascotesAdotados.Add(usuario, [mascote]);
+            mascotesAdotados.Add(usuario, new(StringComparer.OrdinalIgnoreCase) { [mascote.Nome] = mascote });
         }
         await File.WriteAllTextAsync(_caminhoArquivo, JsonSerializer.Serialize(_mascotesAdotados));
     }
@@ -26,11 +26,11 @@ internal class RepositorioMascotes
     {
         var mascotesAdotados = await CarregarMascotesAsync();
         return mascotesAdotados.TryGetValue(usuario, out var mascotes)
-            ? mascotes
+            ? mascotes.Values.ToList()
             : [];
     }
 
-    private async Task<Dictionary<string, List<Tamagotchi>>> CarregarMascotesAsync()
+    private async Task<Dictionary<string, Dictionary<string, Tamagotchi>>> CarregarMascotesAsync()
     {
         if (_mascotesAdotados != null)
         {
@@ -39,14 +39,14 @@ internal class RepositorioMascotes
 
         if (!File.Exists(_caminhoArquivo))
         {   
-            _mascotesAdotados = new();
+            _mascotesAdotados = new(StringComparer.OrdinalIgnoreCase);
             await File.WriteAllTextAsync(_caminhoArquivo, JsonSerializer.Serialize(_mascotesAdotados));
             return _mascotesAdotados;
         }
 
         var json = await File.ReadAllTextAsync(_caminhoArquivo);
         _mascotesAdotados = JsonSerializer
-            .Deserialize<Dictionary<string, List<Tamagotchi>>>(json) ?? new();
+            .Deserialize<Dictionary<string, Dictionary<string, Tamagotchi>>>(json) ?? new();
 
         return _mascotesAdotados;
     }
