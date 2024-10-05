@@ -3,7 +3,14 @@ namespace ConsoleUi.Model;
 
 public class Tamagotchi
 {
-    public record RegistroHistorico(string Acao, int Humor, int Fome, int Sono, string Mensagem, DateTimeOffset Horario);
+    public record RegistroHistorico(
+        string Acao, 
+        int Humor, 
+        int Fome, 
+        int Sono, 
+        bool EstaDormindo, 
+        string Mensagem, 
+        DateTimeOffset Horario);
 
     public int Id { get; init; }
     public string Nome { get; set; } = string.Empty;
@@ -74,6 +81,6 @@ public class Tamagotchi
 
     public void RegistrarHistorico(string acao)
     {
-        Historico.Add(new RegistroHistorico(acao, Humor, Fome, Sono, Mensagem, DateTimeOffset.Now));
+        Historico.Add(new RegistroHistorico(acao, Humor, Fome, Sono, EstaDormindo, Mensagem, DateTimeOffset.Now));
     }
 }

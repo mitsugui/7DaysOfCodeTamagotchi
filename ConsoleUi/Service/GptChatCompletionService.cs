@@ -43,7 +43,7 @@ public class GptChatCompletionService
 		_organization = Environment.GetEnvironmentVariable("API_ORGANIZATION")!;
 		_projectId = Environment.GetEnvironmentVariable("API_PROJECT_ID")!;
 		_model = "gpt-4o-mini";
-		
+
 		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 		_httpClient.DefaultRequestHeaders.Add("OpenAI-Organization", _organization);
 		_httpClient.DefaultRequestHeaders.Add("OpenAI-Project", _projectId);
@@ -51,23 +51,63 @@ public class GptChatCompletionService
 
 	public async Task GetGpt4CompletionAsync(Tamagotchi tamagotchi, PromptAcao prompt)
 	{
+		List<GptMessage> messages =
+		[
+			new GptMessage
+			{
+				Role = "system",
+				Content = Prompt
+			}
+		];
+
+		if (tamagotchi.Historico.Count > 0)
+		{
+			var ultimosRegistros = tamagotchi.Historico
+				.OrderByDescending(x => x.Horario)
+				.Take(5)
+				.ToList();
+
+			for (var i = 0; i < ultimosRegistros.Count - 1; i++)
+			{
+				var registro = ultimosRegistros[i];
+				var registroAnterior = ultimosRegistros[i + 1];
+				messages.Add(new GptMessage
+				{
+					Role = "user",
+					Content = new PromptAcao
+					{
+						Acao = registro.Acao,
+						Humor = registroAnterior.Humor,
+						Fome = registroAnterior.Fome,
+						Sono = registroAnterior.Sono,
+						EstaDormindo = registroAnterior.EstaDormindo
+					}.ToJson()
+				});
+				messages.Add(new GptMessage
+				{
+					Role = "assistant",
+					Content = new RespostaGpt
+					{
+						Mensagem = registro.Mensagem,
+						Humor = registro.Humor,
+						Fome = registro.Fome,
+						Sono = registro.Sono
+					}.ToJson()
+				});
+			}
+		}
+
+		messages.Add(new GptMessage
+		{
+			Role = "user",
+			Content = prompt.ToJson()
+		});
+
 		var apiUrl = "https://api.openai.com/v1/chat/completions";
 		var requestBody = JsonSerializer.Serialize(new GptRequest
 		{
 			Model = _model,
-			Messages =
-            [
-                new GptMessage
-				{
-					Role = "system",
-					Content = Prompt
-				},
-				new GptMessage
-				{
-					Role = "user",
-					Content = JsonSerializer.Serialize(prompt, new JsonSerializerOptions { WriteIndented = false })
-				}
-			]
+			Messages = messages.ToArray(),
 		});
 
 		using var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
@@ -75,7 +115,7 @@ public class GptChatCompletionService
 
 		if (!responseMessage.IsSuccessStatusCode)
 		{
-		    var errorContent = await responseMessage.Content.ReadAsStringAsync();
+			var errorContent = await responseMessage.Content.ReadAsStringAsync();
 			throw new Exception($"Error calling GPTAPI: {responseMessage.ReasonPhrase}, Detalehs: {errorContent}");
 		}
 
@@ -88,17 +128,13 @@ public class GptChatCompletionService
 		var conteudoResposta = message.GetProperty("content")
 			.GetString() ?? "";
 
-		Console.WriteLine($"Resposta: {conteudoResposta}");
-		var respostaGpt = JsonSerializer.Deserialize<JsonElement>(conteudoResposta);
-
-		tamagotchi.Mensagem = respostaGpt.GetProperty("Mensagem")
-			.GetString() ?? "";
-		tamagotchi.Humor = respostaGpt.GetProperty("Humor")
-			.GetInt32();
-		tamagotchi.Fome = respostaGpt.GetProperty("Fome")
-			.GetInt32();
-		tamagotchi.Sono = respostaGpt.GetProperty("Sono")
-			.GetInt32();
+		var respostaGpt = JsonSerializer.Deserialize<RespostaGpt>(conteudoResposta)
+			?? throw new Exception("Erro ao deserializar resposta do GPT");
+			
+        tamagotchi.Mensagem = respostaGpt.Mensagem;
+		tamagotchi.Humor = respostaGpt.Humor;
+		tamagotchi.Fome = respostaGpt.Fome;
+		tamagotchi.Sono = respostaGpt.Sono;
 	}
 }
 
@@ -109,6 +145,14 @@ public class PromptAcao
 	public int Fome { get; set; }
 	public int Sono { get; set; }
 	public bool EstaDormindo { get; set; }
+}
+
+public class RespostaGpt
+{
+	public string Mensagem { get; set; } = string.Empty;
+	public int Humor { get; set; }
+	public int Fome { get; set; }
+	public int Sono { get; set; }
 }
 
 public class GptMessage
