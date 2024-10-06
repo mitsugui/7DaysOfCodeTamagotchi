@@ -3,6 +3,9 @@
 @inject IPlayerStateStorage PlayerStateStorage
 @inject GptChatCompletionService GptService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+@using Microsoft.JSInterop
 
 <h3>Interagir com @nomeMascote</h3>
 
@@ -22,7 +25,17 @@
         <li><button class="btn btn-link" @onclick="GoBack">Voltar</button></li>
     </ul>
     <p>Ou escreva uma mensagem para o mascote:</p>
-    <input @bind="_userMessage" placeholder="Digite sua mensagem" />
+    <div class="input-group">
+        <input @bind="_userMessage" placeholder="Digite sua mensagem" class="form-control" />
+        <button class="btn @(IsRecording ? "btn-danger" : "btn-secondary")" @onclick="ToggleVoiceInput">
+            <i class="fas @(IsRecording ? "fa-microphone-slash" : "fa-microphone")"></i>
+            @(IsRecording ? "Parar" : "Falar")
+        </button>
+    </div>
+    @if (IsRecording)
+    {
+        <p><em>Escutando...</em></p>
+    }
     <button class="btn btn-primary" @onclick="SendMessage">Enviar</button>
 }
 else
@@ -40,10 +53,79 @@ else
 
     private string? _userMessage;
 
+    private IJSObjectReference? module;
+    private DotNetObjectReference<InteractWithMascot>? dotNetObjectRef;
+    private bool IsRecording = false;
+
+
     protected override async Task OnInitializedAsync()
     {
         _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
         _mascote = _playerState?.AdoptedMascots.FirstOrDefault(m => m.Nome == nomeMascote);
+
+        // Carrega o módulo JavaScript
+        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/speechRecognition.js");
+
+        // Cria uma referência de objeto .NET para permitir chamadas do JavaScript para o .NET
+        dotNetObjectRef = DotNetObjectReference.Create(this);
+
+        // Inicializa o reconhecimento de voz
+        await module.InvokeVoidAsync("initialize", dotNetObjectRef);
+    }
+
+    [JSInvokable]
+    public void OnVoiceInputReceived(string recognizedText)
+    {
+        _userMessage = recognizedText;
+        IsRecording = false; // Reseta o estado de gravação
+        InvokeAsync(StateHasChanged);
+    }
+    
+    [JSInvokable]
+    public void OnVoiceInputError(string error)
+    {
+        IsRecording = false;
+        Console.WriteLine($"Erro no reconhecimento de voz: {error}");
+        InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnVoiceInputEnded()
+    {
+        IsRecording = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleVoiceInput()
+    {
+        if (IsRecording)
+        {
+            await StopVoiceInput();
+        }
+        else
+        {
+            await StartVoiceInput();
+        }
+    }
+
+    private async Task StartVoiceInput()
+    {
+        if (module != null)
+        {
+            IsRecording = true;
+            await module.InvokeVoidAsync("startRecognition");
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task StopVoiceInput()
+    {
+        if (module != null)
+        {
+            await module.InvokeVoidAsync("stopRecognition");
+        }
+        IsRecording = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void ShowDetails()
@@ -89,6 +171,7 @@ else
         {
             await Interact(_userMessage);
             _userMessage = string.Empty;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -113,5 +196,17 @@ else
         await PlayerStateStorage.SavePlayerStateAsync(_playerState);
 
         NavigationManager.NavigateTo($"/mascot-history/{_mascote.Nome}");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module != null)
+        {
+            await module.DisposeAsync();
+        }
+        if (dotNetObjectRef != null)
+        {
+            dotNetObjectRef.Dispose();
+        }
     }
 }
