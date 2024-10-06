@@ -7,6 +7,7 @@
 
 @if (_mascote != null)
 {
+    <img src="@_mascote.ImageUrl" alt="@_mascote.Nome" class="mascot-image" />
     <p>Parabéns! Você adotou um @nomePokemon. O ovo está chocando...</p>
     <p>Quer dar um nome para seu mascote? Se sim, digite o nome. Se não, deixe em branco.</p>
     <input @bind="_nomeMascote" placeholder="Nome do mascote" />
@@ -31,7 +32,7 @@ else
     {
         _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
 
-        var url = TamagotchiService.ObterUrlPokemon(nomePokemon);
+        var url = TamagotchiService.ObterInfoMascote(nomePokemon)?.Url;
         if (url == null) return;
 
         _mascote = await TamagotchiService.ObterMascoteAsync(url);

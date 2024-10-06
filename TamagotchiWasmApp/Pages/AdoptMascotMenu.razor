@@ -33,7 +33,7 @@
 
     private async Task AdoptMascot()
     {
-        var url = TamagotchiService.ObterUrlPokemon(nomePokemon);
+        var url = TamagotchiService.ObterInfoMascote(nomePokemon)?.Url;
         if (url == null) return;
 
         _mascoteSelecionado = await TamagotchiService.ObterMascoteAsync(url);

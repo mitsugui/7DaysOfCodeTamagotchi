@@ -11,46 +11,79 @@
 
 @if (_mascote != null)
 {
-    var horaRegistroAnterior = (DateTimeOffset?)null;
-    @foreach (var registro in _mascote.Historico.OrderBy(h => h.Horario).Take(30))
-    {
-        @if (horaRegistroAnterior == null
-            || registro.Horario - horaRegistroAnterior > TimeSpan.FromMinutes(5))
-        {
-            <p><strong>@registro.Horario.ToString("dd/MM/yyyy HH:mm:ss")</strong></p>
-        }
-        <p><strong>@_playerState?.NomeJogador:</strong> @registro.Acao</p>
-        <p><strong>@_mascote.Nome:</strong> @registro.Mensagem</p>
-        <hr />
-        
-        horaRegistroAnterior = registro.Horario;
-    }
-    <p>@_playerState?.NomeJogador, você deseja:</p>
-    <ul>
-        <li><button class="btn btn-link" @onclick="ShowDetails">Saber mais sobre @_mascote.Nome</button></li>
-        <li><button class="btn btn-link" @onclick="FeedMascot">Alimentar @_mascote.Nome</button></li>
-        <li><button class="btn btn-link" @onclick="PlayWithMascot">Brincar com @_mascote.Nome</button></li>
-        <li>
-            <button class="btn btn-link" @onclick="ToggleSleep">
-                @(_mascote.EstaDormindo ? $"Acordar {_mascote.Nome}" : $"Fazer {_mascote.Nome} dormir")
+    <div class="chat-container">
+        <div class="action-buttons">
+            <button class="btn btn-link" @onclick="ShowDetails" title="Saber mais">
+                <i class="fas fa-info-circle"></i>
             </button>
-        </li>
-        <li><button class="btn btn-link" @onclick="ViewConversations">Ver nossas conversas anteriores</button></li>
-        <li><button class="btn btn-link" @onclick="GoBack">Voltar</button></li>
-    </ul>
-    <p>Ou escreva uma mensagem para o mascote:</p>
-    <div class="input-group">
-        <input @bind="_userMessage" placeholder="Digite sua mensagem" class="form-control" />
-        <button class="btn @(_isRecording ? "btn-danger" : "btn-secondary")" @onclick="ToggleVoiceInput">
-            <i class="fas @(_isRecording ? "fa-microphone-slash" : "fa-microphone")"></i>
-            @(_isRecording ? "Parar" : "Falar")
-        </button>
+            <button class="btn btn-link" @onclick="FeedMascot" title="Alimentar">
+                <i class="fas fa-utensils"></i>
+            </button>
+            <button class="btn btn-link" @onclick="PlayWithMascot" title="Brincar">
+                <i class="fas fa-gamepad"></i>
+            </button>
+            <button class="btn btn-link" @onclick="ToggleSleep" title="@(_mascote.EstaDormindo ? "Acordar" : "Dormir")">
+                <i class="fas @(_mascote.EstaDormindo ? "fa-sun" : "fa-bed")"></i>
+            </button>
+            <button class="btn btn-link" @onclick="ViewConversations" title="Conversas">
+                <i class="fas fa-history"></i>
+            </button>
+            <button class="btn btn-link" @onclick="GoBack" title="Voltar">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+        <div class="chat-history">
+            @{
+                var horaRegistroAnterior = (DateTimeOffset?)null;
+                @foreach (var registro in _mascote.Historico.OrderBy(h => h.Horario).Take(30))
+                {
+                    @if (horaRegistroAnterior == null
+                        || registro.Horario - horaRegistroAnterior > TimeSpan.FromMinutes(5))
+                    {
+                        <p><strong>@registro.Horario.ToString("dd/MM/yyyy HH:mm:ss")</strong></p>
+                    }
+                    @if (registro.Acao != null)
+                    {
+                        <!-- Mensagem do jogador -->
+                        <div class="chat-message user-message">
+                            <div class="message-content">
+                                @registro.Acao
+                            </div>
+                        </div>
+                    }
+                    @if (registro.Mensagem != null)
+                    {
+                        <!-- Mensagem do mascote -->
+                        <div class="chat-message mascot-message">
+                            <img src="@_mascote.ImageUrl" alt="@_mascote.Nome" class="mascot-image" />
+                            <div class="message-content">
+                                @registro.Mensagem
+                            </div>
+                        </div>
+                    }
+                    <hr />
+                    
+                    horaRegistroAnterior = registro.Horario;
+                }
+            }
+        </div>
+        <div class="chat-input">
+            <div class="input-group">
+                <input @bind="_userMessage" placeholder="Digite sua mensagem" class="form-control" />
+                <button class="btn @(_isRecording ? "btn-danger" : "btn-secondary")" @onclick="ToggleVoiceInput">
+                    <i class="fas @(_isRecording ? "fa-microphone-slash" : "fa-microphone")"></i>
+                    @(_isRecording ? "Parar" : "Falar")
+                </button>
+                @if (_isRecording)
+                {
+                    <p><em>Escutando...</em></p>
+                }
+                <button class="btn btn-primary" @onclick="SendMessage" title="Enviar">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
     </div>
-    @if (_isRecording)
-    {
-        <p><em>Escutando...</em></p>
-    }
-    <button class="btn btn-primary" @onclick="SendMessage">Enviar</button>
 }
 else
 {
@@ -205,8 +238,6 @@ else
 
         // Atualize o estado do mascote se necessário
         await PlayerStateStorage.SavePlayerStateAsync(_playerState);
-
-        NavigationManager.NavigateTo($"/mascot-history/{_mascote.Nome}");
     }
 
     public async ValueTask DisposeAsync()

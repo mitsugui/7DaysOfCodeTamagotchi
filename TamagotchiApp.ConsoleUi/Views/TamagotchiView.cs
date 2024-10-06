@@ -73,7 +73,7 @@ internal class TamagotchiView
         }
     }
 
-    public string? MostrarMenuEscolhaMascoteAdocao(string nomeJogador, IReadOnlyList<string> pokemons)
+    public string? MostrarMenuEscolhaMascoteAdocao(string nomeJogador, IReadOnlyList<InfoMascote> pokemons)
     {
         Console.Clear();
         Console.WriteLine("---------------- ADOTAR UM MASCOTE ---------------");
@@ -88,7 +88,7 @@ internal class TamagotchiView
             && indiceEscolha >= 1
             && indiceEscolha <= pokemons.Count)
         {
-            return pokemons[indiceEscolha - 1];
+            return pokemons[indiceEscolha - 1].Nome;
         }
         else
         {

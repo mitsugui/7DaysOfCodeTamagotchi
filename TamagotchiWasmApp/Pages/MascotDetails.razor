@@ -7,6 +7,7 @@
 
 @if (_mascote != null)
 {
+    <img src="@_mascote.ImageUrl" alt="@_mascote.Nome" class="mascot-image" />
     <p><strong>Nome:</strong> @_mascote.Nome</p>
     <p><strong>Altura:</strong> @_mascote.Altura</p>
     <p><strong>Peso:</strong> @_mascote.Peso</p>
@@ -59,7 +60,7 @@ else
         _mascoteAdotado = _mascote != null;
         if (_mascote != null) return;
 
-        var url = TamagotchiService.ObterUrlPokemon(nomeMascote);
+        var url = TamagotchiService.ObterInfoMascote(nomeMascote)?.Url;
         if (url == null) return;
 
         _mascote = await TamagotchiService.ObterMascoteAsync(url);

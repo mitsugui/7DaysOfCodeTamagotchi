@@ -2,6 +2,7 @@
 @page "/view-mascots"
 @inject IPlayerStateStorage PlayerStateStorage
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 
 <h3>Seus Mascotes</h3>
 
@@ -14,6 +15,9 @@
             <li>
                 <button class="btn btn-link" @onclick="() => InteractWithMascot(mascot)">
                     @mascot.Nome
+                </button>
+                <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteMascot(mascot)">
+                    Excluir
                 </button>
             </li>
         }
@@ -41,5 +45,25 @@ else
     private void GoToAdoptMascot()
     {
         NavigationManager.NavigateTo("/select-mascot-menu");
+    }
+    
+    private async Task ConfirmDeleteMascot(Tamagotchi mascote)
+    {
+        // Opcional: Exibir uma confirmação antes de excluir
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", $"Tem certeza de que deseja excluir {mascote.Nome}?");
+        if (confirmed)
+        {
+            await DeleteMascot(mascote);
+        }
+    }
+
+    private async Task DeleteMascot(Tamagotchi mascot)
+    {
+        if (_playerState != null)
+        {
+            _playerState.AdoptedMascots.Remove(mascot);
+            await PlayerStateStorage.SavePlayerStateAsync(_playerState);
+            StateHasChanged();
+        }
     }
 }

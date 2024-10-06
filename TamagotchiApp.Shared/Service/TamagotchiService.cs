@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using TamagotchiApp.Shared.Model;
 using TamagotchiApp.Shared.Utils;
 
@@ -7,16 +8,16 @@ namespace TamagotchiApp.Shared.Service;
 public class TamagotchiService
 {
     private const string BaseUrl = @"https://pokeapi.co/api/v2/";
-    
-    private static readonly Dictionary<string, string> Pokemons = new()
+
+    private static readonly Dictionary<string, InfoMascote> Pokemons = new()
     {
-        {"Pikachu", "pokemon/25/"},
-        {"Bulbasaur", "pokemon/1/"},
-        {"Charmander", "pokemon/4/"},
-        {"Ivysaur", "pokemon/2/"},
-        {"Pidgeot", "pokemon/18/"},
-        {"Psyduck", "pokemon/54/"},
-        {"Squirtle", "pokemon/7/"},
+        {"Pikachu", new InfoMascote("Pikachu", "pokemon/25/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")},
+        {"Bulbasaur", new InfoMascote("Bulbasaur", "pokemon/1/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png")},
+        {"Charmander", new InfoMascote("Charmander", "pokemon/4/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png")},
+        {"Ivysaur", new InfoMascote("Ivysaur", "pokemon/2/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png")},
+        {"Pidgeot", new InfoMascote("Pidgeot", "pokemon/18/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/18.png")},
+        {"Psyduck", new InfoMascote("Psyduck", "pokemon/54/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/54.png")},
+        {"Squirtle", new InfoMascote("Squirtle", "pokemon/7/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png")},
     };
 
     private readonly HttpClient _client;
@@ -29,19 +30,26 @@ public class TamagotchiService
         };
     }
 
-    public IReadOnlyCollection<string> ListarPokemons()
+    public IReadOnlyCollection<InfoMascote> ListarMascotes()
     {
-        return Pokemons.Keys;
+        return Pokemons.Values;
     }
 
-    public string? ObterUrlPokemon(string pokemon)
+    public InfoMascote? ObterInfoMascote(string pokemon)
     {
-        return Pokemons.TryGetValue(pokemon, out var url) ? url : null;
-    } 
+        return Pokemons.TryGetValue(pokemon, out var info) ? info : null;
+    }
 
     public async Task<Tamagotchi?> ObterMascoteAsync(string url)
     {
-        var pokemon = await _client.GetFromJsonAsync<Pokemon>(url, CancellationToken.None);
+        var textoJson = await _client.GetStringAsync(url);
+
+        var serializeOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        };
+
+        var pokemon = JsonSerializer.Deserialize<Pokemon>(textoJson, serializeOptions);
         if (pokemon == null) return null;
 
         return new Tamagotchi
@@ -49,6 +57,7 @@ public class TamagotchiService
             Id = pokemon.Id,
             Nome = pokemon.Name.ToPascalCase(),
             Url = url,
+            ImageUrl = pokemon.Sprites.FrontDefault,
             Especie = pokemon.Name.ToPascalCase(),
             Habilidades = pokemon.Abilities
                 .Select(a => a.Ability.Name.ToPascalCase())
@@ -68,6 +77,7 @@ internal record Pokemon
     string Name,
     Abilities[] Abilities,
     PokemonTypes[] Types,
+    PokemonSprites Sprites,
     int Height,
     int Weight
 );
@@ -93,4 +103,9 @@ internal record Ability
 (
     string Name,
     string Url
+);
+
+internal record PokemonSprites
+(
+    string FrontDefault
 );

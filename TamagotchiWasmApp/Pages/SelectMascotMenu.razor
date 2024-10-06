@@ -6,11 +6,12 @@
 <h3>Adotar um Mascote</h3>
 <p>@_playerState?.NomeJogador, escolha uma espécie:</p>
 <ul>
-    @foreach (var pokemon in _pokemons)
+    @foreach (var mascote in _mascotes)
     {
         <li>
-            <button class="btn btn-link" @onclick="() => SelectPokemon(pokemon)">
-                @pokemon
+            <img src="@mascote.ImageUrl" alt="@mascote.Nome" class="mascot-image" />
+            <button class="btn btn-link" @onclick="() => SelectPokemon(mascote.Nome)">
+                @mascote.Nome
             </button>
         </li>
     }
@@ -19,16 +20,16 @@
 @code {
     private PlayerState? _playerState;
 
-    private List<string> _pokemons = new();
+    private List<InfoMascote> _mascotes = new();
 
     protected override async Task OnInitializedAsync()
     {
         _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
-        _pokemons = TamagotchiService.ListarPokemons().ToList();
+        _mascotes = TamagotchiService.ListarMascotes().ToList();
     }
 
-    private void SelectPokemon(string pokemon)
+    private void SelectPokemon(string mascote)
     {
-        NavigationManager.NavigateTo($"/adopt-mascot-menu/{pokemon}");
+        NavigationManager.NavigateTo($"/adopt-mascot-menu/{mascote}");
     }
 }

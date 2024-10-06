@@ -7,6 +7,7 @@ public class Tamagotchi
     public string Nome { get; set; } = string.Empty;
     public string Especie { get; init; } = string.Empty;
     public string Url { get; init; } = string.Empty;
+    public string? ImageUrl { get; set; }
     public string[]? Habilidades { get; init; }
     public string[]? Tipos { get; init; }
     public int Altura { get; init; }

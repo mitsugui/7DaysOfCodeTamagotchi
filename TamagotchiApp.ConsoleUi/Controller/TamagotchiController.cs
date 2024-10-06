@@ -1,4 +1,3 @@
-using TamagotchiApi.Model;
 using TamagotchiApp.ConsoleUi.Views;
 using TamagotchiApp.Shared.Service;
 using TamagotchiApp.Shared.Model;
@@ -37,11 +36,11 @@ internal class TamagotchiController
             switch (opcao)
             {
                 case TamagotchiView.OpcoesMenuPrincipal.AdotarMascote:
-                    var pokemons = _service.ListarPokemons();
+                    var pokemons = _service.ListarMascotes();
                     _nomeMascoteEscolhidoAdocao = _view.MostrarMenuEscolhaMascoteAdocao(_nomeJogador, pokemons.ToList());
                     if (_nomeMascoteEscolhidoAdocao == null) break;
 
-                    var url = _service.ObterUrlPokemon(_nomeMascoteEscolhidoAdocao);
+                    var url = _service.ObterInfoMascote(_nomeMascoteEscolhidoAdocao)?.Url;
                     if (url == null) break;
 
                     var mascoteAdotado = await AdotarMascoteAsync(_nomeJogador, _nomeMascoteEscolhidoAdocao, url);
