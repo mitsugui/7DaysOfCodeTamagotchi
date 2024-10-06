@@ -1,0 +1,74 @@
+@page "/mascot-details/{nomeMascote}"
+@inject NavigationManager NavigationManager
+@inject IPlayerStateStorage PlayerStateStorage
+@inject TamagotchiService TamagotchiService
+
+<h3>Detalhes do Mascote</h3>
+
+@if (_mascote != null)
+{
+    <p><strong>Nome:</strong> @_mascote.Nome</p>
+    <p><strong>Altura:</strong> @_mascote.Altura</p>
+    <p><strong>Peso:</strong> @_mascote.Peso</p>
+    <p><strong>Humor:</strong> @_mascote.StatusHumor</p>
+    <p><strong>Alimentação:</strong> @_mascote.StatusFome</p>
+    <p><strong>Sono:</strong> @_mascote.StatusSono</p>
+
+    @if (_mascote.Tipos != null)
+    {
+        <p><strong>Tipos:</strong></p>
+        <ul>
+            @foreach (var tipo in _mascote.Tipos)
+            {
+                <li>@tipo</li>
+            }
+        </ul>
+    }
+
+    @if (_mascote.Habilidades != null)
+    {
+        <p><strong>Habilidades:</strong></p>
+        <ul>
+            @foreach (var habilidade in _mascote.Habilidades)
+            {
+                <li>@habilidade.ToUpper()</li>
+            }
+        </ul>
+    }
+
+    <button class="btn btn-primary" @onclick="GoBack">Voltar</button>
+}
+else
+{
+    <p>Mascote não encontrado.</p>
+}
+
+@code {
+    [Parameter]
+    public string nomeMascote { get; set; } = string.Empty;
+
+    private PlayerState? _playerState;
+    private Tamagotchi? _mascote;
+    private bool _mascoteAdotado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+
+        _mascote = _playerState?.AdoptedMascots.FirstOrDefault(m => m.Nome == nomeMascote);
+        _mascoteAdotado = _mascote != null;
+        if (_mascote != null) return;
+
+        var url = TamagotchiService.ObterUrlPokemon(nomeMascote);
+        if (url == null) return;
+
+        _mascote = await TamagotchiService.ObterMascoteAsync(url);
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo(_mascoteAdotado 
+            ? $"/interact-with-mascot/{nomeMascote}" 
+            : "/select-mascot-menu");
+    }
+}

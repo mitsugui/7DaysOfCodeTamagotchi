@@ -1,0 +1,26 @@
+@page "/enter-player-name"
+@inject NavigationManager NavigationManager
+@inject IPlayerStateStorage PlayerStateStorage
+
+<h3>Qual é o seu nome?</h3>
+<input @bind="_nomeJogador" placeholder="Digite seu nome" />
+<button class="btn btn-primary" @onclick="Continue">Continuar</button>
+
+@code {
+    private string? _nomeJogador;
+
+    private async Task Continue()
+    {
+        if (string.IsNullOrWhiteSpace(_nomeJogador)) return;
+
+        await PlayerStateStorage.SetActivePlayerAsync(_nomeJogador);
+
+        var playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+        if (playerState == null)
+        {
+            await PlayerStateStorage.SavePlayerStateAsync(new PlayerState { NomeJogador = _nomeJogador });
+        };
+
+        NavigationManager.NavigateTo("/main-menu");
+    }
+}

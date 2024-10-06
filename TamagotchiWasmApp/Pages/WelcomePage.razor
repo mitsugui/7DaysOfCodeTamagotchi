@@ -1,0 +1,13 @@
+<!-- Pages/WelcomePage.razor -->
+@page "/"
+@inject NavigationManager NavigationManager
+
+<h1>Bem-vindo ao Tamagotchi Pokémon!</h1>
+<button class="btn btn-primary" @onclick="Continue">Pressione para continuar</button>
+
+@code {
+    private void Continue()
+    {
+        NavigationManager.NavigateTo("/enter-player-name");
+    }
+}

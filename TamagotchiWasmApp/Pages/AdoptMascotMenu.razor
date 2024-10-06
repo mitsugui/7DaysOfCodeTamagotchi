@@ -1,0 +1,49 @@
+@page "/adopt-mascot-menu/{nomePokemon}"
+@inject NavigationManager NavigationManager
+@inject IPlayerStateStorage PlayerStateStorage
+@inject TamagotchiService TamagotchiService
+
+<h3>Adotar um Mascote</h3>
+<p>@_playerState?.NomeJogador, você deseja:</p>
+<p>Espécie escolhida: @nomePokemon</p>
+<ul>
+    <li><button class="btn btn-link" @onclick="ViewDetails">Saber mais sobre @nomePokemon</button></li>
+    <li><button class="btn btn-link" @onclick="AdoptMascot">Adotar @nomePokemon</button></li>
+    <li><button class="btn btn-link" @onclick="GoBack">Voltar</button></li>
+</ul>
+
+@code {
+    [Parameter]
+    public string nomePokemon { get; set; } = string.Empty;
+
+    private PlayerState? _playerState;
+
+    private Tamagotchi? _mascoteSelecionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+    }
+
+    private void ViewDetails()
+    {
+        // Navegar para a página de detalhes do mascote
+        NavigationManager.NavigateTo($"/mascot-details/{nomePokemon}");
+    }
+
+    private async Task AdoptMascot()
+    {
+        var url = TamagotchiService.ObterUrlPokemon(nomePokemon);
+        if (url == null) return;
+
+        _mascoteSelecionado = await TamagotchiService.ObterMascoteAsync(url);
+        if (_mascoteSelecionado == null) return;
+
+        NavigationManager.NavigateTo($"/confirm-adoption/{nomePokemon}");
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/select-mascot-menu");
+    }
+}

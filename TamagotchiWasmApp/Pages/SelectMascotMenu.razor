@@ -1,0 +1,34 @@
+@page "/select-mascot-menu"
+@inject NavigationManager NavigationManager
+@inject IPlayerStateStorage PlayerStateStorage
+@inject TamagotchiService TamagotchiService
+
+<h3>Adotar um Mascote</h3>
+<p>@_playerState?.NomeJogador, escolha uma espécie:</p>
+<ul>
+    @foreach (var pokemon in _pokemons)
+    {
+        <li>
+            <button class="btn btn-link" @onclick="() => SelectPokemon(pokemon)">
+                @pokemon
+            </button>
+        </li>
+    }
+</ul>
+
+@code {
+    private PlayerState? _playerState;
+
+    private List<string> _pokemons = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+        _pokemons = TamagotchiService.ListarPokemons().ToList();
+    }
+
+    private void SelectPokemon(string pokemon)
+    {
+        NavigationManager.NavigateTo($"/adopt-mascot-menu/{pokemon}");
+    }
+}

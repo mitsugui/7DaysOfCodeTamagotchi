@@ -1,0 +1,54 @@
+@page "/confirm-adoption/{nomePokemon}"
+@inject NavigationManager NavigationManager
+@inject TamagotchiService TamagotchiService
+@inject IPlayerStateStorage PlayerStateStorage
+
+<h3>Adotar @nomePokemon</h3>
+
+@if (_mascote != null)
+{
+    <p>Parabéns! Você adotou um @nomePokemon. O ovo está chocando...</p>
+    <p>Quer dar um nome para seu mascote? Se sim, digite o nome. Se não, deixe em branco.</p>
+    <input @bind="_nomeMascote" placeholder="Nome do mascote" />
+    <button class="btn btn-primary" @onclick="Confirmar">Confirmar</button>
+}
+else
+{
+    <p>Carregando informações...</p>
+}
+
+@code {
+    [Parameter]
+    public string nomePokemon { get; set; } = string.Empty;
+
+    private PlayerState? _playerState;
+
+    private Tamagotchi? _mascote;
+
+    private string? _nomeMascote;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+
+        var url = TamagotchiService.ObterUrlPokemon(nomePokemon);
+        if (url == null) return;
+
+        _mascote = await TamagotchiService.ObterMascoteAsync(url);
+    }
+
+    private async Task Confirmar()
+    {
+        if (_mascote == null || _playerState == null) return;
+
+        if (!string.IsNullOrWhiteSpace(_nomeMascote))
+        {
+            _mascote.Nome = _nomeMascote;
+        }
+
+        _playerState.AdoptedMascots.Add(_mascote);
+        await PlayerStateStorage.SavePlayerStateAsync(_playerState!);
+
+        NavigationManager.NavigateTo("/main-menu");
+    }
+}

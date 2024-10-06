@@ -1,0 +1,117 @@
+<!-- Pages/InteractWithMascot.razor -->
+@page "/interact-with-mascot/{nomeMascote}"
+@inject IPlayerStateStorage PlayerStateStorage
+@inject GptChatCompletionService GptService
+@inject NavigationManager NavigationManager
+
+<h3>Interagir com @nomeMascote</h3>
+
+@if (_mascote != null)
+{
+    <p>@_playerState?.NomeJogador, você deseja:</p>
+    <ul>
+        <li><button class="btn btn-link" @onclick="ShowDetails">Saber mais sobre @_mascote.Nome</button></li>
+        <li><button class="btn btn-link" @onclick="FeedMascot">Alimentar @_mascote.Nome</button></li>
+        <li><button class="btn btn-link" @onclick="PlayWithMascot">Brincar com @_mascote.Nome</button></li>
+        <li>
+            <button class="btn btn-link" @onclick="ToggleSleep">
+                @(_mascote.EstaDormindo ? $"Acordar {_mascote.Nome}" : $"Fazer {_mascote.Nome} dormir")
+            </button>
+        </li>
+        <li><button class="btn btn-link" @onclick="ViewConversations">Ver nossas conversas anteriores</button></li>
+        <li><button class="btn btn-link" @onclick="GoBack">Voltar</button></li>
+    </ul>
+    <p>Ou escreva uma mensagem para o mascote:</p>
+    <input @bind="_userMessage" placeholder="Digite sua mensagem" />
+    <button class="btn btn-primary" @onclick="SendMessage">Enviar</button>
+}
+else
+{
+    <p>Mascote não encontrado.</p>
+}
+
+@code {
+    [Parameter]
+    public string nomeMascote { get; set; } = string.Empty;
+
+    private PlayerState? _playerState;
+
+    private Tamagotchi? _mascote;
+
+    private string? _userMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+        _mascote = _playerState?.AdoptedMascots.FirstOrDefault(m => m.Nome == nomeMascote);
+    }
+
+    private void ShowDetails()
+    {
+        if (_mascote == null) return;
+        NavigationManager.NavigateTo($"/mascot-details/{_mascote.Nome}");
+    }
+
+    private async Task FeedMascot()
+    {
+        await Interact("Alimentar");
+    }
+
+    private async Task PlayWithMascot()
+    {
+        await Interact("Brincar");
+    }
+
+    private async Task ToggleSleep()
+    {
+        if (_mascote == null) return;
+
+        var action = _mascote.EstaDormindo ? "Acordar" : "Dormir";
+        _mascote.DormirOuAcordar();
+        await Interact(action);
+    }
+
+    private void ViewConversations()
+    {
+        if (_mascote == null) return;
+
+        NavigationManager.NavigateTo($"/mascot-history/{_mascote.Nome}");
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/view-mascots");
+    }
+
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrWhiteSpace(_userMessage))
+        {
+            await Interact(_userMessage);
+            _userMessage = string.Empty;
+        }
+    }
+
+    private async Task Interact(string action)
+    {
+        if (_playerState == null
+            || _mascote == null) return;
+
+        var prompt = new PromptAcao
+        {
+            Acao = action,
+            Humor = _mascote.Humor,
+            Fome = _mascote.Fome,
+            Sono = _mascote.Sono,
+            EstaDormindo = _mascote.EstaDormindo
+        };
+
+        await GptService.GetGpt4CompletionAsync(_mascote, prompt);
+        _mascote.RegistrarHistorico(action);
+
+        // Atualize o estado do mascote se necessário
+        await PlayerStateStorage.SavePlayerStateAsync(_playerState);
+
+        NavigationManager.NavigateTo($"/mascot-history/{_mascote.Nome}");
+    }
+}

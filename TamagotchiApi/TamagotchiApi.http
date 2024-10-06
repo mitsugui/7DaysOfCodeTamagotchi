@@ -1,0 +1,17 @@
+@TamagotchiApi_HostAddress = http://localhost:5218
+
+POST {{TamagotchiApi_HostAddress}}/api/gpt/interact/  HTTP/1.1
+content-type: application/json
+
+{
+    "prompt": 
+    {
+        "acao":"comer",
+        "humor": 5,
+        "fome": 5,
+        "sono": 5,
+        "estaDormindo": false
+    }
+}
+
+###

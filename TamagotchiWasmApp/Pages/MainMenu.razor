@@ -1,0 +1,38 @@
+<!-- Pages/MainMenu.razor -->
+@page "/main-menu"
+@inject IPlayerStateStorage PlayerStateStorage
+@inject NavigationManager NavigationManager
+
+<h3>Menu Principal</h3>
+<p>@_nomeJogador, você deseja:</p>
+<ul>
+    <li><button class="btn btn-link" @onclick="AdoptMascot">Adotar um mascote</button></li>
+    <li><button class="btn btn-link" @onclick="ViewMascots">Ver seus mascotes</button></li>
+    <li><button class="btn btn-link" @onclick="ExitGame">Sair</button></li>
+</ul>
+
+@code {
+    private string? _nomeJogador;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+        _nomeJogador = playerState?.NomeJogador;
+    }
+
+    private void AdoptMascot()
+    {
+        NavigationManager.NavigateTo("/select-mascot-menu");
+    }
+
+    private void ViewMascots()
+    {
+        NavigationManager.NavigateTo("/view-mascots");
+    }
+
+    private void ExitGame()
+    {
+        // Implementar lógica para sair do jogo ou redirecionar para uma página de despedida
+        NavigationManager.NavigateTo("/goodbye");
+    }
+}

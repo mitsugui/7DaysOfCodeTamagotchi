@@ -1,0 +1,45 @@
+<!-- Pages/ViewMascots.razor -->
+@page "/view-mascots"
+@inject IPlayerStateStorage PlayerStateStorage
+@inject NavigationManager NavigationManager
+
+<h3>Seus Mascotes</h3>
+
+@if (_playerState != null && _playerState.AdoptedMascots.Any())
+{
+    <p>Escolha um mascote para interagir:</p>
+    <ul>
+        @foreach (var mascot in _playerState.AdoptedMascots)
+        {
+            <li>
+                <button class="btn btn-link" @onclick="() => InteractWithMascot(mascot)">
+                    @mascot.Nome
+                </button>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>Você não adotou nenhum mascote.</p>
+    <button class="btn btn-primary" @onclick="GoToAdoptMascot">Adotar um Mascote</button>
+}
+
+@code {
+    private PlayerState? _playerState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+    }
+
+    private void InteractWithMascot(Tamagotchi mascote)
+    {
+        NavigationManager.NavigateTo($"/interact-with-mascot/{mascote.Nome}");
+    }
+
+    private void GoToAdoptMascot()
+    {
+        NavigationManager.NavigateTo("/select-mascot-menu");
+    }
+}

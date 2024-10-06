@@ -1,0 +1,44 @@
+<!-- Pages/MascotHistory.razor -->
+@page "/mascot-history/{nomeMascote}"
+@inject IPlayerStateStorage PlayerStateStorage
+@inject NavigationManager NavigationManager
+
+<h3>Conversas com @nomeMascote</h3>
+
+@if (_mascote != null)
+{
+    @foreach (var registro in _mascote.Historico.OrderBy(h => h.Horario).Take(30))
+    {
+        <p><strong>@registro.Horario.ToString("dd/MM/yyyy HH:mm:ss")</strong></p>
+        <p><strong>@_playerState?.NomeJogador:</strong> @registro.Acao</p>
+        <p><strong>@_mascote.Nome:</strong> @registro.Mensagem</p>
+        <hr />
+    }
+    <button class="btn btn-primary" @onclick="GoBack">Voltar</button>
+}
+else
+{
+    <p>Mascote não encontrado.</p>
+}
+
+@code {
+    [Parameter]
+    public string nomeMascote { get; set; } = string.Empty;
+
+    private PlayerState? _playerState;
+
+    private Tamagotchi? _mascote;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _playerState = await PlayerStateStorage.LoadActivePlayerStateAsync();
+
+        _mascote = _playerState?.AdoptedMascots.FirstOrDefault(m => m.Nome == nomeMascote);
+    }
+
+    private void GoBack()
+    {
+        if (_mascote == null) return;
+        NavigationManager.NavigateTo($"/interact-with-mascot/{_mascote.Nome}");
+    }
+}
