@@ -11,6 +11,20 @@
 
 @if (_mascote != null)
 {
+    var horaRegistroAnterior = (DateTimeOffset?)null;
+    @foreach (var registro in _mascote.Historico.OrderBy(h => h.Horario).Take(30))
+    {
+        @if (horaRegistroAnterior == null
+            || registro.Horario - horaRegistroAnterior > TimeSpan.FromMinutes(5))
+        {
+            <p><strong>@registro.Horario.ToString("dd/MM/yyyy HH:mm:ss")</strong></p>
+        }
+        <p><strong>@_playerState?.NomeJogador:</strong> @registro.Acao</p>
+        <p><strong>@_mascote.Nome:</strong> @registro.Mensagem</p>
+        <hr />
+        
+        horaRegistroAnterior = registro.Horario;
+    }
     <p>@_playerState?.NomeJogador, você deseja:</p>
     <ul>
         <li><button class="btn btn-link" @onclick="ShowDetails">Saber mais sobre @_mascote.Nome</button></li>
@@ -27,12 +41,12 @@
     <p>Ou escreva uma mensagem para o mascote:</p>
     <div class="input-group">
         <input @bind="_userMessage" placeholder="Digite sua mensagem" class="form-control" />
-        <button class="btn @(IsRecording ? "btn-danger" : "btn-secondary")" @onclick="ToggleVoiceInput">
-            <i class="fas @(IsRecording ? "fa-microphone-slash" : "fa-microphone")"></i>
-            @(IsRecording ? "Parar" : "Falar")
+        <button class="btn @(_isRecording ? "btn-danger" : "btn-secondary")" @onclick="ToggleVoiceInput">
+            <i class="fas @(_isRecording ? "fa-microphone-slash" : "fa-microphone")"></i>
+            @(_isRecording ? "Parar" : "Falar")
         </button>
     </div>
-    @if (IsRecording)
+    @if (_isRecording)
     {
         <p><em>Escutando...</em></p>
     }
@@ -48,14 +62,11 @@ else
     public string nomeMascote { get; set; } = string.Empty;
 
     private PlayerState? _playerState;
-
     private Tamagotchi? _mascote;
-
     private string? _userMessage;
-
-    private IJSObjectReference? module;
-    private DotNetObjectReference<InteractWithMascot>? dotNetObjectRef;
-    private bool IsRecording = false;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<InteractWithMascot>? _dotNetObjectRef;
+    private bool _isRecording = false;
 
 
     protected override async Task OnInitializedAsync()
@@ -64,27 +75,27 @@ else
         _mascote = _playerState?.AdoptedMascots.FirstOrDefault(m => m.Nome == nomeMascote);
 
         // Carrega o módulo JavaScript
-        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/speechRecognition.js");
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/speechRecognition.js");
 
         // Cria uma referência de objeto .NET para permitir chamadas do JavaScript para o .NET
-        dotNetObjectRef = DotNetObjectReference.Create(this);
+        _dotNetObjectRef = DotNetObjectReference.Create(this);
 
         // Inicializa o reconhecimento de voz
-        await module.InvokeVoidAsync("initialize", dotNetObjectRef);
+        await _module.InvokeVoidAsync("initialize", _dotNetObjectRef);
     }
 
     [JSInvokable]
     public void OnVoiceInputReceived(string recognizedText)
     {
         _userMessage = recognizedText;
-        IsRecording = false; // Reseta o estado de gravação
+        _isRecording = false; // Reseta o estado de gravação
         InvokeAsync(StateHasChanged);
     }
     
     [JSInvokable]
     public void OnVoiceInputError(string error)
     {
-        IsRecording = false;
+        _isRecording = false;
         Console.WriteLine($"Erro no reconhecimento de voz: {error}");
         InvokeAsync(StateHasChanged);
     }
@@ -92,13 +103,13 @@ else
     [JSInvokable]
     public void OnVoiceInputEnded()
     {
-        IsRecording = false;
+        _isRecording = false;
         InvokeAsync(StateHasChanged);
     }
 
     private async Task ToggleVoiceInput()
     {
-        if (IsRecording)
+        if (_isRecording)
         {
             await StopVoiceInput();
         }
@@ -110,21 +121,21 @@ else
 
     private async Task StartVoiceInput()
     {
-        if (module != null)
+        if (_module != null)
         {
-            IsRecording = true;
-            await module.InvokeVoidAsync("startRecognition");
+            _isRecording = true;
+            await _module.InvokeVoidAsync("startRecognition");
             await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task StopVoiceInput()
     {
-        if (module != null)
+        if (_module != null)
         {
-            await module.InvokeVoidAsync("stopRecognition");
+            await _module.InvokeVoidAsync("stopRecognition");
         }
-        IsRecording = false;
+        _isRecording = false;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -200,13 +211,13 @@ else
 
     public async ValueTask DisposeAsync()
     {
-        if (module != null)
+        if (_module != null)
         {
-            await module.DisposeAsync();
+            await _module.DisposeAsync();
         }
-        if (dotNetObjectRef != null)
+        if (_dotNetObjectRef != null)
         {
-            dotNetObjectRef.Dispose();
+            _dotNetObjectRef.Dispose();
         }
     }
 }
