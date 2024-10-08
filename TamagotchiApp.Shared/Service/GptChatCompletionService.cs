@@ -7,12 +7,9 @@ public class GptChatCompletionService
 {
     private readonly HttpClient _httpClient;
 
-    public GptChatCompletionService()
+    public GptChatCompletionService(IHttpClientFactory factory)
     {
-        _httpClient = new HttpClient
-		{
-			BaseAddress = new Uri("http://localhost:5218")
-		};
+        _httpClient = factory.CreateClient("API");
     }
 
     public async Task GetGpt4CompletionAsync(Tamagotchi tamagotchi, PromptAcao prompt)

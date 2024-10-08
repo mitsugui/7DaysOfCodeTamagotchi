@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using TamagotchiApp.Shared.Model;
 using TamagotchiApp.Shared.Utils;
@@ -7,8 +6,6 @@ namespace TamagotchiApp.Shared.Service;
 
 public class TamagotchiService
 {
-    private const string BaseUrl = @"https://pokeapi.co/api/v2/";
-
     private static readonly Dictionary<string, InfoMascote> Pokemons = new()
     {
         {"Pikachu", new InfoMascote("Pikachu", "pokemon/25/", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")},
@@ -22,12 +19,9 @@ public class TamagotchiService
 
     private readonly HttpClient _client;
 
-    public TamagotchiService()
+    public TamagotchiService(IHttpClientFactory factory)
     {
-        _client = new HttpClient
-        {
-            BaseAddress = new(BaseUrl)
-        };
+        _client = factory.CreateClient("PokemonAPI");
     }
 
     public IReadOnlyCollection<InfoMascote> ListarMascotes()

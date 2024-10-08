@@ -80,7 +80,7 @@ internal class TamagotchiView
         Console.WriteLine($"{nomeJogador}. Escolha uma espécie:");
         for (var i = 0; i < pokemons.Count; i++)
         {
-            Console.WriteLine($"{i + 1}. {pokemons[i]}");
+            Console.WriteLine($"{i + 1}. {pokemons[i].Nome}");
         }
 
         var opcao = Console.ReadLine();
