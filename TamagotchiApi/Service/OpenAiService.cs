@@ -93,9 +93,6 @@ Resposta: {""Mensagem"":""Ai que sono!!"", ""Humor"":8, ""Fome"":6, ""Sono"":4}"
             Messages = messages.ToArray(),
         });
 
-        Console.WriteLine("-------------------------");
-        Console.WriteLine(requestBody);
-
         using var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
         using var responseMessage = await _httpClient.PostAsync(OpenAiApiUrl, content);
 
